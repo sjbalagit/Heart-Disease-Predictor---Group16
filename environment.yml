@@ -3,4 +3,3 @@ channels:
   - conda-forge
 dependencies:
   - conda-lock
-prefix: /Users/a71960/miniforge3/envs/condalock
