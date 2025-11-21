@@ -1,1 +1,5 @@
 playground/
+.DS_Store
+.ipynb_checkpoints/
+scripts/.ipynb_checkpoints/
+__pycache__/
