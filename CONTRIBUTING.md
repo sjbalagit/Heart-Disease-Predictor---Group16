@@ -37,6 +37,8 @@ conda-lock install -n YOURENV conda-lock.yml
 ```
 ### Activate the conda environment
 
+Run the command below in terminal to activate the environment.
+
 ```
 conda activate YOURENV
 ```
