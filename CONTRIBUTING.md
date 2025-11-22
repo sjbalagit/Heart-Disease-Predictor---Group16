@@ -1,3 +1,18 @@
+## Contributing
+
+We welcome and appreciate all contributions. We make sure all contributions are cited and credited properly.
+
+### Example Contributions
+
+Ways you can contribute to this work:
+
+- Report bugs
+- Fixing issues
+- Adding new features
+- Improving documentation
+- Sharing suggestions and feedback
+
+
 ### Developer Dependencies
 conda (>= 24.11.0)  
 conda-lock (>= 2.5.7)  
@@ -60,3 +75,7 @@ At root directory, update environment.yml using:
 ```
 conda env export --from-history > environment.yml
 ```
+
+## Attributions
+
+This contributing guide was adapted from the repository _[AI Bias in Farming](https://github.com/skysheng7/AI_bias_in_farming/blob/main/CONTRIBUTING.md)_ by Sky Sheng.
