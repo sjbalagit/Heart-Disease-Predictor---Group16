@@ -1,5 +1,12 @@
-name: condalock
+name: Heart-Disease-Predictor
 channels:
   - conda-forge
+  - defaults
 dependencies:
   - conda-lock
+  - altair-all=5.4.*
+  - vega_datasets
+  - scipy
+  - matplotlib>=3.2.2
+  - scikit-learn
+  - pandas
