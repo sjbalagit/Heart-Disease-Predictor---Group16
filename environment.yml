@@ -5,8 +5,11 @@ channels:
 dependencies:
   - conda-lock
   - altair-all=5.4.*
+  - jupyterlab
   - vega_datasets
+  - ipykernel
   - scipy
+  - nb_conda_kernels
   - matplotlib>=3.2.2
   - scikit-learn
   - pandas
