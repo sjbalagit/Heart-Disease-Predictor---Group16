@@ -1,34 +1,13 @@
 name: heart-disease-predictor
 channels:
-  - conda-forge
-  - pytorch
-  - anaconda
-  - plotly
-  - defaults
+- conda-forge
 dependencies:
-  - python==3.10
-  - conda=25.7.0
-  - mamba=2.1.1
-  - pip
-  - jupytext
-  - jupyterlab
-  - conda-lock
-  - matplotlib
-  - pandas
-  - nb_conda_kernels
-  - scikit-learn
-  - requests
-  - ipython
-  - graphviz
-  - python-graphviz
-  - jinja2
-  - lightgbm
-  - torchvision
-  - torchaudio
-  - pytorch
-  - autograd
-  - plotly
-  - panel
-  - watchfiles
-  - altair-all
-  - vega_datasets
+- conda=25.7.0
+- mamba=2.1.1
+- python=3.11.14
+- pandas=2.3.3
+- scikit-learn=1.7.2
+- nb_conda_kernels=2.5.1
+- altair-all=6.0.0
+- matplotlib=3.10.8
+- conda-lock=3.0.4
