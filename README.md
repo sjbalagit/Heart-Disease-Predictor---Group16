@@ -12,24 +12,67 @@ It is imperative to ensure accurate diagnosis of heart disease based on a indivi
 
 The [dataset](https://github.com/sjbalagit/Heart-Disease-Predictor---Group16/tree/main/data/raw/Cardiovascular_Disease_Dataset) used in this project has been obtained from [`Mendeley Data`](https://data.mendeley.com/datasets/dzz48mvjht/1). A detailed explanation of all the important features are provided in our analysis. You can find the raw and processed datasets in the data directory of this repository. Our X_train and X_test are represented in X_train.csv and X_test.csv respectively.
 
-## Usage (Attributed from Breast-Cancer-Predictor Project README)
-If this is your first time running this project, then run the following from the root of this repository:
-```
-conda-lock install --name YOURENV conda-lock.yml
-```
-Replace `YOURENV` with the name of the conda environment you want to create.
-To run the analysis, run the following from the root of this repository:
-
-jupyter lab 
-Open notebooks/heart_disease_analysis.ipynb in Jupyter Lab and under Switch/Select Kernel choose "Python [conda env:YOURENV]".
-
-Next, under the "Kernel" menu click "Restart Kernel and Run All Cells...".
+## Dependencies
+- [Docker](https://www.docker.com/)
 
 ## Report
 
 The final report can be found in our [analysis](https://github.com/sjbalagit/Heart-Disease-Predictor---Group16/blob/main/heart_disease_analysis.ipynb).
 
-## Dependencies
+## Usage (Attributed from Breast-Cancer-Predictor Project README)
+
+### Setup
+
+> If you are using Windows or Mac, make sure Docker Desktop is running.
+
+1. Clone this GitHub repository.
+
+### Running the analysis
+
+1. Navigate to the root of this project on your computer using the command line and enter the following command:
+
+```
+docker compose up
+```
+
+2. In the terminal, look for a URL that starts with `http://127.0.0.1:8888/lab?token=` (for an example, see the highlighted text in the terminal below). Copy and paste that URL into your browser.
+
+![Host URL Sample](./images/host_url_sample.png)
+
+3. To run the analysis, open `./heart_disease_analysis.ipynb` in Jupyter Lab you just launched and under the "Kernel" menu click "Restart Kernel and Run All Cells...".
+
+### Clean up
+
+To shut down the container and clean up the resources, type `Ctrl + C` in the terminal where you launched the container, and then type
+
+```
+docker compose rm
+```
+
+## Developer notes
+### Developer dependencies
+- `conda (version 23.9.0 or higher)`
+- `conda-lock (version 2.5.7 or higher)`
+
+### Adding a new dependency
+1. Add the dependency to the `environment.yml` file on a new branch.
+
+2. To update the conda-linux-64.lock file run the following. 
+```
+conda-lock -k explicit --file environment.yml -p linux-64
+``` 
+
+3. Re-build the Docker image locally to ensure it builds and runs properly.
+
+4. Push the changes to GitHub. A new Docker image will be built and pushed to Docker Hub automatically. It will be tagged with the SHA for the commit that changed the file.
+
+5. Update the docker-compose.yml file on your branch to use the new container image (make sure to update the tag specifically).
+
+6. Send a pull request to merge the changes into the main branch.
+
+## Running without Docker
+
+### Dependencies
 
 - conda (version 23.9.0 or higher)
 - conda-lock (version 2.5.7 or higher)
@@ -37,8 +80,26 @@ The final report can be found in our [analysis](https://github.com/sjbalagit/Hea
 - nb_conda_kernels (version 2.3.1 or higher)
 - Python and packages listed in environment.yml
 
+### To run locally using anaconda environmet
+If this is your first time running this project, then run the following from the root of this repository:
+
+```
+conda-lock install --name YOURENV conda-lock.yml
+```
+
+Replace `YOURENV` with the name of the conda environment you want to create.
+To run the analysis, run the following from the root of this repository:
+
+```
+jupyter lab
+```
+
+Open `heart_disease_analysis.ipynb` in Jupyter Lab and under Switch/Select Kernel choose "Python [conda env:YOURENV]".
+
+Next, under the "Kernel" menu click "Restart Kernel and Run All Cells...".
+
 ## References
 
-Ttimbers. (n.d.). TTIMBERS/breast-cancer-predictor. GitHub. https://github.com/ttimbers/breast-cancer-predictor/tree/main?tab=readme-ov-file 
+Ttimbers. (n.d.). TTIMBERS/breast-cancer-predictor. GitHub. <https://github.com/ttimbers/breast-cancer-predictor/tree/main?tab=readme-ov-file>
 
-Doppala, B. P., & Bhattacharyya, D. (2021, April 16). Cardiovascular Disease Dataset (Version 1) [Data Set]. Mendeley Data. https://doi.org/10.17632/dzz48mvjht.1
+Doppala, B. P., & Bhattacharyya, D. (2021, April 16). Cardiovascular Disease Dataset (Version 1) [Data Set]. Mendeley Data. <https://doi.org/10.17632/dzz48mvjht.1>

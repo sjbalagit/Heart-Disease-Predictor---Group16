@@ -1,0 +1,12 @@
+services:
+  analysis-env:
+    image: rishadaz/heart-disease-predictor:2bd06f6
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/home/jovyan
+    deploy:
+      resources:
+        limits:
+          memory: 5G
+    platform: linux/amd64
