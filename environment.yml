@@ -11,3 +11,5 @@ dependencies:
 - altair-all=6.0.0
 - matplotlib=3.10.8
 - conda-lock=3.0.4
+- pandera=0.26.1
+- deepchecks=0.3.2
