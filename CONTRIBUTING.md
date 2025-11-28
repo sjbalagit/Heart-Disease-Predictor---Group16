@@ -83,6 +83,12 @@ At root directory, update environment.yml using:
 conda env export --from-history > environment.yml
 ```
 
+### Code of Conduct
+- Treat all contributors with respect and professionalism.  
+- Communicate clearly, politely and constructively.  
+- Report issues, bugs or concerns in a constructive manner.   
+
+
 ## Attributions
 
 This contributing guide was adapted from the repository _[AI Bias in Farming](https://github.com/skysheng7/AI_bias_in_farming/blob/main/CONTRIBUTING.md)_ by Sky Sheng.
