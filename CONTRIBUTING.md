@@ -17,6 +17,13 @@ Ways you can contribute to this work:
 conda (>= 24.11.0)  
 conda-lock (>= 2.5.7)  
 
+
+### Pull Request Guidelines
+- Open a PR only after your changes are complete, tested, and documented where necessary.
+- Keep your PR focused on a single update or fix, and include a clear description of what you changed.
+- Ensure all checks and tests pass before requesting a review.
+
+
 ### Instructions for Installing Conda and Conda-Lock
 
 Use Miniforge platform to install Conda. Download Miniforge for your operating system from https://conda-forge.org/download/. Install Miniforge by running the downloaded .exe file in Windows or run the following command in your terminal locally. Adjust the installer name as required.
@@ -75,6 +82,12 @@ At root directory, update environment.yml using:
 ```
 conda env export --from-history > environment.yml
 ```
+
+### Code of Conduct
+- Treat all contributors with respect and professionalism.  
+- Communicate clearly, politely and constructively.  
+- Report issues, bugs or concerns in a constructive manner.   
+
 
 ## Attributions
 
