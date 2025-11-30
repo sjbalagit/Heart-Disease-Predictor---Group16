@@ -7529,27 +7529,31 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">altair</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">alt</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">altair</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">alt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandera</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pa</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.compose</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_column_transformer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.compose</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_column_transformer</span><span class="p">,</span> <span class="n">make_column_selector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">StandardScaler</span><span class="p">,</span> <span class="n">OneHotEncoder</span><span class="p">,</span> <span class="n">OrdinalEncoder</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span><span class="p">,</span> <span class="n">cross_validate</span><span class="p">,</span> <span class="n">GridSearchCV</span><span class="p">,</span> <span class="n">RandomizedSearchCV</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegression</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.svm</span><span class="w"> </span><span class="kn">import</span> <span class="n">SVC</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.tree</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionTreeClassifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.neighbors</span><span class="w"> </span><span class="kn">import</span> <span class="n">KNeighborsClassifier</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_pipeline</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">cross_validate</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.dummy</span><span class="w"> </span><span class="kn">import</span> <span class="n">DummyClassifier</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfusionMatrixDisplay</span> 
-<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomizedSearchCV</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">fbeta_score</span><span class="p">,</span> <span class="n">make_scorer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfusionMatrixDisplay</span><span class="p">,</span> <span class="n">fbeta_score</span><span class="p">,</span> <span class="n">make_scorer</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">deepchecks.tabular</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">deepchecks.tabular.checks</span><span class="w"> </span><span class="kn">import</span> <span class="n">FeatureLabelCorrelation</span><span class="p">,</span> <span class="n">FeatureFeatureCorrelation</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">FutureWarning</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="s2">"deepchecks"</span><span class="p">)</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">FutureWarning</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="s2">"pandera"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7673,17 +7677,17 @@ a.anchor-link {
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">url</span> <span class="o">=</span> <span class="s2">"https://prod-dcd-datasets-cache-zipfiles.s3.eu-west-1.amazonaws.com/dzz48mvjht-1.zip"</span>
 
 <span class="n">request</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"./data/raw/Cardiovascular_Disease_Dataset_original.zip"</span><span class="p">,</span> <span class="s1">'wb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"../data/raw/Cardiovascular_Disease_Dataset_original.zip"</span><span class="p">,</span> <span class="s1">'wb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
 
-<span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="s2">"./data/raw/Cardiovascular_Disease_Dataset_original.zip"</span><span class="p">,</span> <span class="s1">'r'</span><span class="p">)</span> <span class="k">as</span> <span class="n">zip_ref</span><span class="p">:</span>
-    <span class="n">zip_ref</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="s2">"./data/raw"</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="s2">"../data/raw/Cardiovascular_Disease_Dataset_original.zip"</span><span class="p">,</span> <span class="s1">'r'</span><span class="p">)</span> <span class="k">as</span> <span class="n">zip_ref</span><span class="p">:</span>
+    <span class="n">zip_ref</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="s2">"../data/raw"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=646ac737">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=646ac737">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7691,10 +7695,7 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">'./data/raw/Cardiovascular_Disease_Dataset/Cardiovascular_Disease_Dataset.csv'</span><span class="p">)</span>
-<span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
-
-<span class="n">colnames</span> <span class="o">=</span> <span class="p">[</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">colnames</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s1">'patient_id'</span><span class="p">,</span> 
     <span class="s1">'age'</span><span class="p">,</span> 
     <span class="s1">'gender'</span><span class="p">,</span> 
@@ -7711,55 +7712,8 @@ a.anchor-link {
     <span class="s1">'target'</span>
 <span class="p">]</span>
 
-<span class="n">heart</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">"./data/raw/Cardiovascular_Disease_Dataset/Cardiovascular_Disease_Dataset.csv"</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">colnames</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=953ad1ec">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><em>Table 1: Raw Input Data - First 5 Rows</em></p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d5c4be7a">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>This section provides a detailed exploration of the dataset, focusing on the distribution of features, relationships with the target variable and insights that support later preprocessing and modeling.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8e123f09">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="Initial-Data-Inspection">Initial Data Inspection<a class="anchor-link" href="#Initial-Data-Inspection">¶</a></h4><p>Basic inspection functions such as head, shape and info help understand the dataset’s structure. They show the first few rows, dimensions of the data and confirm that all 14 columns contain complete, non-null values.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9ba4317e">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">info</span><span class="p">())</span>
+<span class="n">heart</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">"../data/raw/Cardiovascular_Disease_Dataset/Cardiovascular_Disease_Dataset.csv"</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">colnames</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">heart</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -7769,215 +7723,8 @@ a.anchor-link {
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>(1000, 14)
-&lt;class 'pandas.core.frame.DataFrame'&gt;
-RangeIndex: 1000 entries, 0 to 999
-Data columns (total 14 columns):
- #   Column             Non-Null Count  Dtype  
----  ------             --------------  -----  
- 0   patientid          1000 non-null   int64  
- 1   age                1000 non-null   int64  
- 2   gender             1000 non-null   int64  
- 3   chestpain          1000 non-null   int64  
- 4   restingBP          1000 non-null   int64  
- 5   serumcholestrol    1000 non-null   int64  
- 6   fastingbloodsugar  1000 non-null   int64  
- 7   restingrelectro    1000 non-null   int64  
- 8   maxheartrate       1000 non-null   int64  
- 9   exerciseangia      1000 non-null   int64  
- 10  oldpeak            1000 non-null   float64
- 11  slope              1000 non-null   int64  
- 12  noofmajorvessels   1000 non-null   int64  
- 13  target             1000 non-null   int64  
-dtypes: float64(1), int64(13)
-memory usage: 109.5 KB
-None
-</pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ece75581">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="Splitting-Data-into-Training-and-Test-Sets">Splitting Data into Training and Test Sets<a class="anchor-link" href="#Splitting-Data-into-Training-and-Test-Sets">¶</a></h4><p>The dataset is split into training (80%) and testing (20%) subsets to support unbiased modeling. Using a fixed random state ensures that the split is reproducible. EDA is performed on the training data to prevent information leakage.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=ff65db8e">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Change values of 1 and 0 to 'Heart Disease' and 'No Heart Disease' in target</span>
-<span class="n">heart</span><span class="p">[</span><span class="s1">'target'</span><span class="p">]</span> <span class="o">=</span> <span class="n">heart</span><span class="p">[</span><span class="s1">'target'</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">({</span>
-    <span class="mi">1</span> <span class="p">:</span> <span class="s1">'Heart Disease'</span><span class="p">,</span>
-    <span class="mi">0</span> <span class="p">:</span> <span class="s1">'No Heart Disease'</span>
-<span class="p">})</span>
-
-<span class="c1"># Create train test split</span>
-<span class="n">train_heart</span><span class="p">,</span> <span class="n">test_heart</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">heart</span><span class="p">,</span> <span class="n">test_size</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span><span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
-
-<span class="n">train_heart</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">"./data/processed/train_heart.csv"</span><span class="p">)</span> <span class="c1"># changed heart_train to train_heart.csv for consistency</span>
-<span class="n">test_heart</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">"./data/processed/test_heart.csv"</span><span class="p">)</span> <span class="c1"># changed heart_test to test_heart.csv for consistency</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5032c364-466c-413d-b8a4-6349230ab304">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Data-Validation">Data Validation<a class="anchor-link" href="#Data-Validation">¶</a></h3><h5 id="Correct-Data-File-Format">Correct Data File Format<a class="anchor-link" href="#Correct-Data-File-Format">¶</a></h5><p>The dataset was successfully read into a DataFrame and validated against a predefined pandera schema to ensure the structure and format matched what the analysis required. No format-related issues were detected.</p>
-<h5 id="Correct-Column-Names">Correct Column Names<a class="anchor-link" href="#Correct-Column-Names">¶</a></h5><p>All column names were checked against the schema, ensuring consistency with the expected variables such as patient_id, age, serum_cholesterol, and target. This prevents downstream errors caused by misspellings or naming mismatches.</p>
-<h5 id="No-Empty-Observations">No Empty Observations<a class="anchor-link" href="#No-Empty-Observations">¶</a></h5><p>A schema-level check was included to detect and prevent any rows that contain only missing values. The validation confirmed that no fully empty observations were present.</p>
-<h5 id="Missingness-Within-Expected-Thresholds">Missingness Within Expected Thresholds<a class="anchor-link" href="#Missingness-Within-Expected-Thresholds">¶</a></h5><p>Columns that contain missing data were set as nullable=True. Some missing values appeared as zeros (e.g., slope = 0, cholesterol = 0). These were flagged with warnings during validation and would be handled through imputation during preprocessing to avoid losing data.</p>
-<h5 id="Correct-Data-Types">Correct Data Types<a class="anchor-link" href="#Correct-Data-Types">¶</a></h5><p>Each variable was validated against the expected data type (integer, float, or string). This ensures numerical columns are not read in as text and that categorical columns are properly formatted.</p>
-<h5 id="No-Duplicate-Observations">No Duplicate Observations<a class="anchor-link" href="#No-Duplicate-Observations">¶</a></h5><p>A validation rule was added to detect duplicate rows. The check confirmed that the dataset does not contain repeated observations.</p>
-<h5 id="No-Outlier-or-Anomalous-Values">No Outlier or Anomalous Values<a class="anchor-link" href="#No-Outlier-or-Anomalous-Values">¶</a></h5><p>Anomalous values checks were applied to identify values outside typical clinical ranges. For certain columns, such as slope and serum_cholesterol, raise_warning=True was used to flag unusual values without stopping execution. Extreme values were handled through imputation or scaling rather than removing them.</p>
-<h5 id="Correct-Category-Levels">Correct Category Levels<a class="anchor-link" href="#Correct-Category-Levels">¶</a></h5><p>The target has two labels: Heart Disease and No Heart Disease. Validation confirmed these levels were used consistently after correcting earlier naming differences.</p>
-<h5 id="Target-Variable-Distribution">Target Variable Distribution<a class="anchor-link" href="#Target-Variable-Distribution">¶</a></h5><p>After validation, the distribution of the target classes was inspected to ensure there were no unexpected patterns, imbalances that might affect modeling.</p>
-<h5 id="No-Anomalous-Correlations-Between-Target-and-Features">No Anomalous Correlations Between Target and Features<a class="anchor-link" href="#No-Anomalous-Correlations-Between-Target-and-Features">¶</a></h5><p>Exploratory checks were performed to confirm that no impossible relationships existed between the target and other features. No issues were identified.</p>
-<h5 id="No-Anomalous-Correlations-Between-Features">No Anomalous Correlations Between Features<a class="anchor-link" href="#No-Anomalous-Correlations-Between-Features">¶</a></h5><p>Relationships between features were examined to ensure there is no anomalous correlation. No anomalies were found that required correction.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=6318fb13-ee30-441c-9606-e19773bf30b8">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># validate data</span>
-<span class="n">schema</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">DataFrameSchema</span><span class="p">(</span>
-    <span class="p">{</span>
-        <span class="s1">'patient_id'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">greater_than</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span>
-        <span class="s1">'age'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="s1">'gender'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="s1">'chest_pain'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="s1">'resting_bp'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">94</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="s1">'serum_cholesterol'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span>
-            <span class="nb">int</span><span class="p">,</span> 
-            <span class="n">checks</span><span class="o">=</span><span class="p">[</span>
-                <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span> <span class="o">&gt;=</span> <span class="mi">126</span> <span class="ow">and</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="mi">564</span><span class="p">,</span>
-                        <span class="n">element_wise</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                        <span class="c1"># Attributed to pandera documentation:</span>
-                        <span class="c1"># https://pandera.readthedocs.io/en/stable/checks.html#raise-warning-instead-of-error-on-check-failure</span>
-                        <span class="n">raise_warning</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                        <span class="n">error</span><span class="o">=</span><span class="s2">"There are outliers in the data values"</span><span class="p">),</span>
-            <span class="p">],</span> 
-            <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="s1">'fasting_blood_sugar'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="s1">'resting_electro'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="s1">'max_heart_rate'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">202</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="s1">'exercise_angia'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="s1">'old_peak'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">6.2</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="s1">'slope'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span>
-            <span class="nb">int</span><span class="p">,</span> 
-            <span class="n">checks</span><span class="o">=</span><span class="p">[</span>
-                <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="mi">3</span><span class="p">,</span>
-                        <span class="n">element_wise</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                        <span class="n">raise_warning</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                        <span class="n">error</span><span class="o">=</span><span class="s2">"Certain slope values are out of range"</span><span class="p">),</span>
-            <span class="p">],</span> 
-            <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="s1">'num_major_vessels'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="s1">'target'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="s1">'Heart Disease'</span><span class="p">,</span> <span class="s1">'No Heart Disease'</span><span class="p">])),</span>
-    <span class="p">},</span>
-    <span class="n">checks</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="k">lambda</span> <span class="n">df</span><span class="p">:</span> <span class="o">~</span><span class="n">df</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">(),</span> <span class="n">error</span><span class="o">=</span><span class="s2">"Duplicate rows found."</span><span class="p">),</span>
-        <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="k">lambda</span> <span class="n">df</span><span class="p">:</span> <span class="o">~</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">any</span><span class="p">(),</span> <span class="n">error</span><span class="o">=</span><span class="s2">"Empty rows found."</span><span class="p">)</span>
-    <span class="p">]</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\_pandas_deprecated.py:146: FutureWarning: Importing pandas-specific classes and functions from the
-top-level pandera module will be **removed in a future version of pandera**.
-If you're using pandera to validate pandas objects, we highly recommend updating
-your import:
-
-```
-# old import
-import pandera as pa
-
-# new import
-import pandera.pandas as pa
-```
-
-If you're using pandera to validate objects from other compatible libraries
-like pyspark or polars, see the supported libraries section of the documentation
-for more information on how to import pandera:
-
-https://pandera.readthedocs.io/en/stable/supported_libraries.html
-
-To disable this warning, set the environment variable:
-
-```
-export DISABLE_PANDERA_IMPORT_WARNING=True
-```
-
-  warnings.warn(_future_warning, FutureWarning)
-</pre>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=dd4fe487-e25a-499f-a0f9-25e30b50e8c4">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">schema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">heart</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:138: SchemaWarning: Column 'serum_cholesterol' failed element-wise validator number 0: &lt;Check &lt;lambda&gt;: There are outliers in the data values&gt; failure cases: 0, 0, 0, 0, 0, 86, 0, 0, 87, 0, 0, 86, 0, 0, 0, 0, 602, 87, 86, 0, 0, 0, 0, 0, 0, 0, 602, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 601, 0, 0, 0, 0, 0, 0, 0, 0, 0, 85, 0, 0, 601, 86, 601, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-  warnings.warn(
-C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:138: SchemaWarning: Column 'slope' failed element-wise validator number 0: &lt;Check &lt;lambda&gt;: Certain slope values are out of range&gt; failure cases: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-  warnings.warn(
-</pre>
-</div>
-</div>
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[7]:</div>
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[3]:</div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
 <div>
 <style scoped="">
@@ -8029,7 +7776,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <td>5.3</td>
 <td>3</td>
 <td>3</td>
-<td>Heart Disease</td>
+<td>1</td>
 </tr>
 <tr>
 <th>1</th>
@@ -8046,7 +7793,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <td>3.7</td>
 <td>1</td>
 <td>1</td>
-<td>No Heart Disease</td>
+<td>0</td>
 </tr>
 <tr>
 <th>2</th>
@@ -8063,7 +7810,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <td>5.0</td>
 <td>1</td>
 <td>0</td>
-<td>No Heart Disease</td>
+<td>0</td>
 </tr>
 <tr>
 <th>3</th>
@@ -8080,7 +7827,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <td>3.2</td>
 <td>2</td>
 <td>2</td>
-<td>Heart Disease</td>
+<td>1</td>
 </tr>
 <tr>
 <th>4</th>
@@ -8097,173 +7844,156 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <td>5.3</td>
 <td>3</td>
 <td>2</td>
-<td>Heart Disease</td>
-</tr>
-<tr>
-<th>...</th>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-</tr>
-<tr>
-<th>995</th>
-<td>9949544</td>
-<td>48</td>
 <td>1</td>
-<td>2</td>
-<td>139</td>
-<td>349</td>
-<td>0</td>
-<td>2</td>
-<td>183</td>
-<td>1</td>
-<td>5.6</td>
-<td>2</td>
-<td>2</td>
-<td>Heart Disease</td>
-</tr>
-<tr>
-<th>996</th>
-<td>9953423</td>
-<td>47</td>
-<td>1</td>
-<td>3</td>
-<td>143</td>
-<td>258</td>
-<td>1</td>
-<td>1</td>
-<td>98</td>
-<td>1</td>
-<td>5.7</td>
-<td>1</td>
-<td>0</td>
-<td>No Heart Disease</td>
-</tr>
-<tr>
-<th>997</th>
-<td>9965859</td>
-<td>69</td>
-<td>1</td>
-<td>0</td>
-<td>156</td>
-<td>434</td>
-<td>1</td>
-<td>0</td>
-<td>196</td>
-<td>0</td>
-<td>1.4</td>
-<td>3</td>
-<td>1</td>
-<td>Heart Disease</td>
-</tr>
-<tr>
-<th>998</th>
-<td>9988507</td>
-<td>45</td>
-<td>1</td>
-<td>1</td>
-<td>186</td>
-<td>417</td>
-<td>0</td>
-<td>1</td>
-<td>117</td>
-<td>1</td>
-<td>5.9</td>
-<td>3</td>
-<td>2</td>
-<td>Heart Disease</td>
-</tr>
-<tr>
-<th>999</th>
-<td>9990855</td>
-<td>25</td>
-<td>1</td>
-<td>0</td>
-<td>158</td>
-<td>270</td>
-<td>0</td>
-<td>0</td>
-<td>143</td>
-<td>1</td>
-<td>4.7</td>
-<td>0</td>
-<td>0</td>
-<td>No Heart Disease</td>
 </tr>
 </tbody>
 </table>
-<p>1000 rows × 14 columns</p>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=03595517-67cc-457c-9046-f2ff2cd76119">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=953ad1ec">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="Correlation-Heatmap">Correlation Heatmap<a class="anchor-link" href="#Correlation-Heatmap">¶</a></h4><p>A correlation matrix is computed and visualized using a heatmap to show linear relationships among features. This helps detect multicollinearity and highlights variables that may have strong predictive relationships with the target.</p>
-<p>Darker blue cells represent stronger positive correlations, while darker red cells represent stronger negative correlations. From the heatmap, the feature slope has the strongest positive relationship with the target, followed by chest pain, resting BP, and number of major vessels. This means these features are more likely to influence whether someone has heart disease. On the other hand, features like age, gender, and exercise angia show very low or almost no correlation with the target, suggesting they don’t have a strong direct relationship with the target. It can also be seen that some features are related to each other. For example, number of major vessels and slope have a moderate positive correlation.</p>
+<p><em>Table 1: Raw Input Data - First 5 Rows</em></p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b8bd95ea-2aa7-4ed4-9ee9-cc4126657702">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=512dad82-72a7-4ea6-a728-2c4ab75a34fe">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h4 id="Splitting-Data-into-Training-and-Test-Sets">Splitting Data into Training and Test Sets<a class="anchor-link" href="#Splitting-Data-into-Training-and-Test-Sets">¶</a></h4><p>The dataset is split into training (80%) and testing (20%) subsets to support unbiased modeling. Using a fixed random state ensures that the split is reproducible. EDA is performed on the training data to prevent information leakage.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=0afe8d7a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">num_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'age'</span><span class="p">,</span> <span class="s1">'resting_bp'</span><span class="p">,</span> <span class="s1">'serum_cholesterol'</span><span class="p">,</span> <span class="s1">'max_heart_rate'</span><span class="p">,</span> <span class="s1">'old_peak'</span><span class="p">]</span>
-<span class="n">cat_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'gender'</span><span class="p">,</span><span class="s1">'chest_pain'</span><span class="p">,</span><span class="s1">'fasting_blood_sugar'</span><span class="p">,</span><span class="s1">'resting_electro'</span><span class="p">,</span><span class="s1">'exercise_angia'</span><span class="p">,</span><span class="s1">'slope'</span><span class="p">,</span><span class="s1">'num_major_vessels'</span><span class="p">]</span>
-
-<span class="n">train_heart_corr</span> <span class="o">=</span> <span class="n">train_heart</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="n">train_heart_corr</span><span class="p">[</span><span class="s1">'target'</span><span class="p">]</span> <span class="o">=</span> <span class="n">train_heart_corr</span><span class="p">[</span><span class="s1">'target'</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">({</span>
-    <span class="s1">'Heart Disease'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s1">'No Heart Disease'</span><span class="p">:</span> <span class="mi">0</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Change values of 1 and 0 to 'Heart Disease' and 'No Heart Disease' in target</span>
+<span class="n">heart</span><span class="p">[</span><span class="s1">'target'</span><span class="p">]</span> <span class="o">=</span> <span class="n">heart</span><span class="p">[</span><span class="s1">'target'</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">({</span>
+    <span class="mi">1</span> <span class="p">:</span> <span class="s1">'Heart Disease'</span><span class="p">,</span>
+    <span class="mi">0</span> <span class="p">:</span> <span class="s1">'No Heart Disease'</span>
 <span class="p">})</span>
 
-<span class="n">corr_matrix</span> <span class="o">=</span> <span class="n">train_heart_corr</span><span class="p">[</span><span class="n">num_cols</span> <span class="o">+</span> <span class="n">cat_cols</span> <span class="o">+</span> <span class="p">[</span><span class="s1">'target'</span><span class="p">]]</span><span class="o">.</span><span class="n">corr</span><span class="p">()</span>
+<span class="c1"># Create train test split</span>
+<span class="n">train_heart</span><span class="p">,</span> <span class="n">test_heart</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">heart</span><span class="p">,</span> <span class="n">test_size</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span><span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
 
-<span class="n">corr_long</span> <span class="o">=</span> <span class="n">corr_matrix</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">id_vars</span><span class="o">=</span><span class="s1">'index'</span><span class="p">)</span>
-<span class="n">corr_long</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'feature_x'</span><span class="p">,</span> <span class="s1">'feature_y'</span><span class="p">,</span> <span class="s1">'correlation'</span><span class="p">]</span>
-
-<span class="n">base</span> <span class="o">=</span> <span class="n">alt</span><span class="o">.</span><span class="n">Chart</span><span class="p">(</span><span class="n">corr_long</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
-    <span class="n">x</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">X</span><span class="p">(</span><span class="s1">'feature_x:N'</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">'Feature'</span><span class="p">),</span>
-    <span class="n">y</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Y</span><span class="p">(</span><span class="s1">'feature_y:N'</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">'Feature'</span><span class="p">))</span>
-
-<span class="n">heatmap</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">mark_rect</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
-    <span class="n">color</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Color</span><span class="p">(</span>
-        <span class="s1">'correlation:Q'</span><span class="p">,</span>
-        <span class="n">scale</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Scale</span><span class="p">(</span><span class="n">scheme</span><span class="o">=</span><span class="s1">'redblue'</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])),</span>
-    <span class="n">tooltip</span><span class="o">=</span><span class="p">[</span><span class="s1">'feature_x'</span><span class="p">,</span> <span class="s1">'feature_y'</span><span class="p">])</span>
-
-<span class="n">text</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">mark_text</span><span class="p">(</span>
-    <span class="n">fontSize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
-    <span class="n">color</span><span class="o">=</span><span class="s1">'black'</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
-    <span class="n">text</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Text</span><span class="p">(</span><span class="s1">'correlation:Q'</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">'.2f'</span><span class="p">))</span>
-
-<span class="n">final_chart</span> <span class="o">=</span> <span class="p">(</span><span class="n">heatmap</span> <span class="o">+</span> <span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">properties</span><span class="p">(</span>
-    <span class="n">title</span><span class="o">=</span><span class="s1">'Correlation Heatmap of All Features with Target'</span><span class="p">,</span>
-    <span class="n">width</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
-    <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span>
-
-<span class="n">final_chart</span>
+<span class="n">train_heart</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">"../data/processed/train_heart.csv"</span><span class="p">)</span>
+<span class="n">test_heart</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">"../data/processed/test_heart.csv"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ecf37176">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Data-Validation">Data Validation<a class="anchor-link" href="#Data-Validation">¶</a></h3>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=59f77930">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h5 id="Correct-Data-File-Format">Correct Data File Format<a class="anchor-link" href="#Correct-Data-File-Format">¶</a></h5><p>The dataset was successfully read into a DataFrame and validated against a predefined pandera schema to ensure the structure and format matched what the analysis required. No format-related issues were detected.</p>
+<h5 id="Correct-Column-Names">Correct Column Names<a class="anchor-link" href="#Correct-Column-Names">¶</a></h5><p>All column names were checked against the schema, ensuring consistency with the expected variables such as patient_id, age, serum_cholesterol, and target. This prevents downstream errors caused by misspellings or naming mismatches.</p>
+<h5 id="No-Empty-Observations">No Empty Observations<a class="anchor-link" href="#No-Empty-Observations">¶</a></h5><p>A schema-level check was included to detect and prevent any rows that contain only missing values. The validation confirmed that no fully empty observations were present.</p>
+<h5 id="Missingness-Within-Expected-Thresholds">Missingness Within Expected Thresholds<a class="anchor-link" href="#Missingness-Within-Expected-Thresholds">¶</a></h5><p>Columns that contain missing data were set as nullable=True. Some missing values appeared as zeros (e.g., slope = 0, cholesterol = 0). These were flagged with warnings during validation.</p>
+<h5 id="Correct-Data-Types">Correct Data Types<a class="anchor-link" href="#Correct-Data-Types">¶</a></h5><p>Each variable was validated against the expected data type (integer, float, or string). This ensures numerical columns are not read in as text and that categorical columns are properly formatted.</p>
+<h5 id="No-Duplicate-Observations">No Duplicate Observations<a class="anchor-link" href="#No-Duplicate-Observations">¶</a></h5><p>A validation rule was added to detect duplicate rows. The check confirmed that the dataset does not contain repeated observations.</p>
+<h5 id="No-Outlier-or-Anomalous-Values">No Outlier or Anomalous Values<a class="anchor-link" href="#No-Outlier-or-Anomalous-Values">¶</a></h5><p>Anomalous values checks were applied to identify values outside typical clinical ranges. For certain columns, such as slope and serum_cholesterol, raise_warning=True was used to flag unusual values without stopping execution. Extreme values were handled through imputation or scaling rather than removing them.</p>
+<h5 id="Correct-Category-Levels">Correct Category Levels<a class="anchor-link" href="#Correct-Category-Levels">¶</a></h5><p>The target has two labels: Heart Disease and No Heart Disease. Validation confirmed these levels were used consistently after correcting earlier naming differences.</p>
+<h5 id="Target-Variable-Distribution">Target Variable Distribution<a class="anchor-link" href="#Target-Variable-Distribution">¶</a></h5><p>After validation, the distribution of the target classes was inspected to ensure there were no unexpected patterns, imbalances that might affect modeling.</p>
+<h5 id="No-Anomalous-Correlations-Between-Target-and-Features">No Anomalous Correlations Between Target and Features<a class="anchor-link" href="#No-Anomalous-Correlations-Between-Target-and-Features">¶</a></h5><p>Exploratory checks were performed to confirm that no impossible relationships existed between the target and other features. No issues were identified.</p>
+<h5 id="No-Anomalous-Correlations-Between-Features">No Anomalous Correlations Between Features<a class="anchor-link" href="#No-Anomalous-Correlations-Between-Features">¶</a></h5><p>Relationships between features were examined to ensure there is no anomalous correlation. No anomalies were found that required correction.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=f00ca7d8">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># validate data</span>
+<span class="n">schema</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">DataFrameSchema</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s1">'patient_id'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">greater_than</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span>
+        <span class="s1">'age'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="s1">'gender'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="s1">'chest_pain'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="s1">'resting_bp'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">94</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="s1">'serum_cholesterol'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span>
+            <span class="nb">int</span><span class="p">,</span> 
+            <span class="n">checks</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span> <span class="o">&gt;=</span> <span class="mi">126</span> <span class="ow">and</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="mi">564</span><span class="p">,</span>
+                        <span class="n">element_wise</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="c1"># Attributed to pandera documentation:</span>
+                        <span class="c1"># https://pandera.readthedocs.io/en/stable/checks.html#raise-warning-instead-of-error-on-check-failure</span>
+                        <span class="n">raise_warning</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">error</span><span class="o">=</span><span class="s2">"There are outliers in the data values"</span><span class="p">),</span>
+            <span class="p">],</span> 
+            <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="s1">'fasting_blood_sugar'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="s1">'resting_electro'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="s1">'max_heart_rate'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">202</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="s1">'exercise_angia'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="s1">'old_peak'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">6.2</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="s1">'slope'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span>
+            <span class="nb">int</span><span class="p">,</span> 
+            <span class="n">checks</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="mi">3</span><span class="p">,</span>
+                        <span class="n">element_wise</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">raise_warning</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">error</span><span class="o">=</span><span class="s2">"Certain slope values are out of range"</span><span class="p">),</span>
+            <span class="p">],</span> 
+            <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="s1">'num_major_vessels'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="s1">'target'</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="s1">'Heart Disease'</span><span class="p">,</span> <span class="s1">'No Heart Disease'</span><span class="p">])),</span>
+    <span class="p">},</span>
+    <span class="n">checks</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="k">lambda</span> <span class="n">df</span><span class="p">:</span> <span class="o">~</span><span class="n">df</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">(),</span> <span class="n">error</span><span class="o">=</span><span class="s2">"Duplicate rows found."</span><span class="p">),</span>
+        <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="k">lambda</span> <span class="n">df</span><span class="p">:</span> <span class="o">~</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">any</span><span class="p">(),</span> <span class="n">error</span><span class="o">=</span><span class="s2">"Empty rows found."</span><span class="p">)</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=706a42b3">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">validated_heart</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">heart</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8276,93 +8006,95 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>C:\Users\Omowunmi\AppData\Local\Temp\ipykernel_5980\694092874.py:5: FutureWarning: Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
-  train_heart_corr['target'] = train_heart_corr['target'].replace({
+<pre>/Users/joya/miniforge3/lib/python3.12/site-packages/pandera/backends/pandas/base.py:138: SchemaWarning: Column 'serum_cholesterol' failed element-wise validator number 0: &lt;Check &lt;lambda&gt;: There are outliers in the data values&gt; failure cases: 0, 0, 0, 0, 0, 86, 0, 0, 87, 0, 0, 86, 0, 0, 0, 0, 602, 87, 86, 0, 0, 0, 0, 0, 0, 0, 602, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 601, 0, 0, 0, 0, 0, 0, 0, 0, 0, 85, 0, 0, 601, 86, 601, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  warnings.warn(
+/Users/joya/miniforge3/lib/python3.12/site-packages/pandera/backends/pandas/base.py:138: SchemaWarning: Column 'slope' failed element-wise validator number 0: &lt;Check &lt;lambda&gt;: Certain slope values are out of range&gt; failure cases: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  warnings.warn(
 </pre>
 </div>
 </div>
-<div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[8]:</div>
-<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
-<style>
-  #altair-viz-fbecfac82ce54fe299254c6bd936e4c7.vega-embed {
-    width: 100%;
-    display: flex;
-  }
-
-  #altair-viz-fbecfac82ce54fe299254c6bd936e4c7.vega-embed details,
-  #altair-viz-fbecfac82ce54fe299254c6bd936e4c7.vega-embed details summary {
-    position: relative;
-  }
-</style>
-<div id="altair-viz-fbecfac82ce54fe299254c6bd936e4c7"></div>
-<script type="text/javascript">
-  var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
-  (function(spec, embedOpt){
-    let outputDiv = document.currentScript.previousElementSibling;
-    if (outputDiv.id !== "altair-viz-fbecfac82ce54fe299254c6bd936e4c7") {
-      outputDiv = document.getElementById("altair-viz-fbecfac82ce54fe299254c6bd936e4c7");
-    }
-
-    const paths = {
-      "vega": "https://cdn.jsdelivr.net/npm/vega@5?noext",
-      "vega-lib": "https://cdn.jsdelivr.net/npm/vega-lib?noext",
-      "vega-lite": "https://cdn.jsdelivr.net/npm/vega-lite@5.20.1?noext",
-      "vega-embed": "https://cdn.jsdelivr.net/npm/vega-embed@6?noext",
-    };
-
-    function maybeLoadScript(lib, version) {
-      var key = `${lib.replace("-", "")}_version`;
-      return (VEGA_DEBUG[key] == version) ?
-        Promise.resolve(paths[lib]) :
-        new Promise(function(resolve, reject) {
-          var s = document.createElement('script');
-          document.getElementsByTagName("head")[0].appendChild(s);
-          s.async = true;
-          s.onload = () => {
-            VEGA_DEBUG[key] = version;
-            return resolve(paths[lib]);
-          };
-          s.onerror = () => reject(`Error loading script: ${paths[lib]}`);
-          s.src = paths[lib];
-        });
-    }
-
-    function showError(err) {
-      outputDiv.innerHTML = `<div class="error" style="color:red;">${err}</div>`;
-      throw err;
-    }
-
-    function displayChart(vegaEmbed) {
-      vegaEmbed(outputDiv, spec, embedOpt)
-        .catch(err => showError(`Javascript Error: ${err.message}<br>This usually means there's a typo in your chart specification. See the javascript console for the full traceback.`));
-    }
-
-    if(typeof define === "function" && define.amd) {
-      requirejs.config({paths});
-      let deps = ["vega-embed"];
-      require(deps, displayChart, err => showError(`Error loading script: ${err.message}`));
-    } else {
-      maybeLoadScript("vega", "5")
-        .then(() => maybeLoadScript("vega-lite", "5.20.1"))
-        .then(() => maybeLoadScript("vega-embed", "6"))
-        .catch(showError)
-        .then(() => displayChart(vegaEmbed));
-    }
-  })({"config": {"view": {"continuousWidth": 300, "continuousHeight": 300}}, "layer": [{"mark": {"type": "rect"}, "encoding": {"color": {"field": "correlation", "scale": {"domain": [-1, 1], "scheme": "redblue"}, "type": "quantitative"}, "tooltip": [{"field": "feature_x", "type": "nominal"}, {"field": "feature_y", "type": "nominal"}], "x": {"field": "feature_x", "title": "Feature", "type": "nominal"}, "y": {"field": "feature_y", "title": "Feature", "type": "nominal"}}}, {"mark": {"type": "text", "color": "black", "fontSize": 12}, "encoding": {"text": {"field": "correlation", "format": ".2f", "type": "quantitative"}, "x": {"field": "feature_x", "title": "Feature", "type": "nominal"}, "y": {"field": "feature_y", "title": "Feature", "type": "nominal"}}}], "data": {"name": "data-720e11766cd2e309b5f8676580ab8935"}, "height": 600, "title": "Correlation Heatmap of All Features with Target", "width": 600, "$schema": "https://vega.github.io/schema/vega-lite/v5.20.1.json", "datasets": {"data-720e11766cd2e309b5f8676580ab8935": [{"feature_x": "age", "feature_y": "age", "correlation": 1.0}, {"feature_x": "resting_bp", "feature_y": "age", "correlation": -0.012372283682296517}, {"feature_x": "serum_cholesterol", "feature_y": "age", "correlation": 0.020224765990922308}, {"feature_x": "max_heart_rate", "feature_y": "age", "correlation": -0.03503469014355346}, {"feature_x": "old_peak", "feature_y": "age", "correlation": -0.02230517455280889}, {"feature_x": "gender", "feature_y": "age", "correlation": -0.022877832793593095}, {"feature_x": "chest_pain", "feature_y": "age", "correlation": 0.054900623917687005}, {"feature_x": "fasting_blood_sugar", "feature_y": "age", "correlation": 0.044983531503913605}, {"feature_x": "resting_electro", "feature_y": "age", "correlation": 0.0926371308784428}, {"feature_x": "exercise_angia", "feature_y": "age", "correlation": -0.04001060311030959}, {"feature_x": "slope", "feature_y": "age", "correlation": -0.013181575295002764}, {"feature_x": "num_major_vessels", "feature_y": "age", "correlation": 0.008725681343453957}, {"feature_x": "target", "feature_y": "age", "correlation": 0.01838269206219578}, {"feature_x": "age", "feature_y": "resting_bp", "correlation": -0.012372283682296517}, {"feature_x": "resting_bp", "feature_y": "resting_bp", "correlation": 1.0}, {"feature_x": "serum_cholesterol", "feature_y": "resting_bp", "correlation": 0.1456624692180854}, {"feature_x": "max_heart_rate", "feature_y": "resting_bp", "correlation": 0.10354199465610374}, {"feature_x": "old_peak", "feature_y": "resting_bp", "correlation": 0.023081906216186252}, {"feature_x": "gender", "feature_y": "resting_bp", "correlation": -0.09046913218891132}, {"feature_x": "chest_pain", "feature_y": "resting_bp", "correlation": 0.22690766750621685}, {"feature_x": "fasting_blood_sugar", "feature_y": "resting_bp", "correlation": 0.2181336226920223}, {"feature_x": "resting_electro", "feature_y": "resting_bp", "correlation": 0.21715341181251122}, {"feature_x": "exercise_angia", "feature_y": "resting_bp", "correlation": -0.038808923334599676}, {"feature_x": "slope", "feature_y": "resting_bp", "correlation": 0.40167284700697126}, {"feature_x": "num_major_vessels", "feature_y": "resting_bp", "correlation": 0.2502357827229213}, {"feature_x": "target", "feature_y": "resting_bp", "correlation": 0.4799662628115955}, {"feature_x": "age", "feature_y": "serum_cholesterol", "correlation": 0.020224765990922308}, {"feature_x": "resting_bp", "feature_y": "serum_cholesterol", "correlation": 0.1456624692180854}, {"feature_x": "serum_cholesterol", "feature_y": "serum_cholesterol", "correlation": 1.0}, {"feature_x": "max_heart_rate", "feature_y": "serum_cholesterol", "correlation": 0.05346590851242519}, {"feature_x": "old_peak", "feature_y": "serum_cholesterol", "correlation": -0.018456555568554127}, {"feature_x": "gender", "feature_y": "serum_cholesterol", "correlation": -0.1290230784164017}, {"feature_x": "chest_pain", "feature_y": "serum_cholesterol", "correlation": 0.16786353528405054}, {"feature_x": "fasting_blood_sugar", "feature_y": "serum_cholesterol", "correlation": 0.2940707014297926}, {"feature_x": "resting_electro", "feature_y": "serum_cholesterol", "correlation": 0.1243060957832304}, {"feature_x": "exercise_angia", "feature_y": "serum_cholesterol", "correlation": 0.011400804453855449}, {"feature_x": "slope", "feature_y": "serum_cholesterol", "correlation": 0.1715956757563555}, {"feature_x": "num_major_vessels", "feature_y": "serum_cholesterol", "correlation": 0.135776442251306}, {"feature_x": "target", "feature_y": "serum_cholesterol", "correlation": 0.2066569519853056}, {"feature_x": "age", "feature_y": "max_heart_rate", "correlation": -0.03503469014355346}, {"feature_x": "resting_bp", "feature_y": "max_heart_rate", "correlation": 0.10354199465610374}, {"feature_x": "serum_cholesterol", "feature_y": "max_heart_rate", "correlation": 0.05346590851242519}, {"feature_x": "max_heart_rate", "feature_y": "max_heart_rate", "correlation": 1.0}, {"feature_x": "old_peak", "feature_y": "max_heart_rate", "correlation": 0.039982533237256083}, {"feature_x": "gender", "feature_y": "max_heart_rate", "correlation": 0.05492465141086418}, {"feature_x": "chest_pain", "feature_y": "max_heart_rate", "correlation": 0.10423329420831279}, {"feature_x": "fasting_blood_sugar", "feature_y": "max_heart_rate", "correlation": 0.09594822993247022}, {"feature_x": "resting_electro", "feature_y": "max_heart_rate", "correlation": 0.08235854766114971}, {"feature_x": "exercise_angia", "feature_y": "max_heart_rate", "correlation": -0.00011981871331720712}, {"feature_x": "slope", "feature_y": "max_heart_rate", "correlation": 0.21052903309518173}, {"feature_x": "num_major_vessels", "feature_y": "max_heart_rate", "correlation": 0.11150913373989908}, {"feature_x": "target", "feature_y": "max_heart_rate", "correlation": 0.2251191869707048}, {"feature_x": "age", "feature_y": "old_peak", "correlation": -0.02230517455280889}, {"feature_x": "resting_bp", "feature_y": "old_peak", "correlation": 0.023081906216186252}, {"feature_x": "serum_cholesterol", "feature_y": "old_peak", "correlation": -0.018456555568554127}, {"feature_x": "max_heart_rate", "feature_y": "old_peak", "correlation": 0.039982533237256083}, {"feature_x": "old_peak", "feature_y": "old_peak", "correlation": 1.0}, {"feature_x": "gender", "feature_y": "old_peak", "correlation": 0.3201949594036568}, {"feature_x": "chest_pain", "feature_y": "old_peak", "correlation": 0.10138037572095525}, {"feature_x": "fasting_blood_sugar", "feature_y": "old_peak", "correlation": 0.02880753444696547}, {"feature_x": "resting_electro", "feature_y": "old_peak", "correlation": 0.044935459664635115}, {"feature_x": "exercise_angia", "feature_y": "old_peak", "correlation": -0.013175631226374947}, {"feature_x": "slope", "feature_y": "old_peak", "correlation": 0.23624143452265334}, {"feature_x": "num_major_vessels", "feature_y": "old_peak", "correlation": 0.09093545514804488}, {"feature_x": "target", "feature_y": "old_peak", "correlation": 0.12886230345229222}, {"feature_x": "age", "feature_y": "gender", "correlation": -0.022877832793593095}, {"feature_x": "resting_bp", "feature_y": "gender", "correlation": -0.09046913218891132}, {"feature_x": "serum_cholesterol", "feature_y": "gender", "correlation": -0.1290230784164017}, {"feature_x": "max_heart_rate", "feature_y": "gender", "correlation": 0.05492465141086418}, {"feature_x": "old_peak", "feature_y": "gender", "correlation": 0.3201949594036568}, {"feature_x": "gender", "feature_y": "gender", "correlation": 1.0}, {"feature_x": "chest_pain", "feature_y": "gender", "correlation": 0.05101743513084093}, {"feature_x": "fasting_blood_sugar", "feature_y": "gender", "correlation": 0.016223816110472855}, {"feature_x": "resting_electro", "feature_y": "gender", "correlation": -0.03707566741357531}, {"feature_x": "exercise_angia", "feature_y": "gender", "correlation": -0.026879936579640416}, {"feature_x": "slope", "feature_y": "gender", "correlation": -0.0219905849980607}, {"feature_x": "num_major_vessels", "feature_y": "gender", "correlation": 0.024658756798981243}, {"feature_x": "target", "feature_y": "gender", "correlation": 0.0376238431249763}, {"feature_x": "age", "feature_y": "chest_pain", "correlation": 0.054900623917687005}, {"feature_x": "resting_bp", "feature_y": "chest_pain", "correlation": 0.22690766750621685}, {"feature_x": "serum_cholesterol", "feature_y": "chest_pain", "correlation": 0.16786353528405054}, {"feature_x": "max_heart_rate", "feature_y": "chest_pain", "correlation": 0.10423329420831279}, {"feature_x": "old_peak", "feature_y": "chest_pain", "correlation": 0.10138037572095525}, {"feature_x": "gender", "feature_y": "chest_pain", "correlation": 0.05101743513084093}, {"feature_x": "chest_pain", "feature_y": "chest_pain", "correlation": 1.0}, {"feature_x": "fasting_blood_sugar", "feature_y": "chest_pain", "correlation": 0.2155765791512715}, {"feature_x": "resting_electro", "feature_y": "chest_pain", "correlation": 0.2198027771222161}, {"feature_x": "exercise_angia", "feature_y": "chest_pain", "correlation": -0.04921606343440628}, {"feature_x": "slope", "feature_y": "chest_pain", "correlation": 0.46314205721035073}, {"feature_x": "num_major_vessels", "feature_y": "chest_pain", "correlation": 0.27825434025528273}, {"feature_x": "target", "feature_y": "chest_pain", "correlation": 0.5297586934252609}, {"feature_x": "age", "feature_y": "fasting_blood_sugar", "correlation": 0.044983531503913605}, {"feature_x": "resting_bp", "feature_y": "fasting_blood_sugar", "correlation": 0.2181336226920223}, {"feature_x": "serum_cholesterol", "feature_y": "fasting_blood_sugar", "correlation": 0.2940707014297926}, {"feature_x": "max_heart_rate", "feature_y": "fasting_blood_sugar", "correlation": 0.09594822993247022}, {"feature_x": "old_peak", "feature_y": "fasting_blood_sugar", "correlation": 0.02880753444696547}, {"feature_x": "gender", "feature_y": "fasting_blood_sugar", "correlation": 0.016223816110472855}, {"feature_x": "chest_pain", "feature_y": "fasting_blood_sugar", "correlation": 0.2155765791512715}, {"feature_x": "fasting_blood_sugar", "feature_y": "fasting_blood_sugar", "correlation": 1.0}, {"feature_x": "resting_electro", "feature_y": "fasting_blood_sugar", "correlation": 0.1689447076277483}, {"feature_x": "exercise_angia", "feature_y": "fasting_blood_sugar", "correlation": 0.0066450537917914386}, {"feature_x": "slope", "feature_y": "fasting_blood_sugar", "correlation": 0.27389784784925475}, {"feature_x": "num_major_vessels", "feature_y": "fasting_blood_sugar", "correlation": 0.18198403144042935}, {"feature_x": "target", "feature_y": "fasting_blood_sugar", "correlation": 0.31729913293139694}, {"feature_x": "age", "feature_y": "resting_electro", "correlation": 0.0926371308784428}, {"feature_x": "resting_bp", "feature_y": "resting_electro", "correlation": 0.21715341181251122}, {"feature_x": "serum_cholesterol", "feature_y": "resting_electro", "correlation": 0.1243060957832304}, {"feature_x": "max_heart_rate", "feature_y": "resting_electro", "correlation": 0.08235854766114971}, {"feature_x": "old_peak", "feature_y": "resting_electro", "correlation": 0.044935459664635115}, {"feature_x": "gender", "feature_y": "resting_electro", "correlation": -0.03707566741357531}, {"feature_x": "chest_pain", "feature_y": "resting_electro", "correlation": 0.2198027771222161}, {"feature_x": "fasting_blood_sugar", "feature_y": "resting_electro", "correlation": 0.1689447076277483}, {"feature_x": "resting_electro", "feature_y": "resting_electro", "correlation": 1.0}, {"feature_x": "exercise_angia", "feature_y": "resting_electro", "correlation": -0.055446771196809935}, {"feature_x": "slope", "feature_y": "resting_electro", "correlation": 0.32326153807250135}, {"feature_x": "num_major_vessels", "feature_y": "resting_electro", "correlation": 0.19489176932198574}, {"feature_x": "target", "feature_y": "resting_electro", "correlation": 0.40975734793364194}, {"feature_x": "age", "feature_y": "exercise_angia", "correlation": -0.04001060311030959}, {"feature_x": "resting_bp", "feature_y": "exercise_angia", "correlation": -0.038808923334599676}, {"feature_x": "serum_cholesterol", "feature_y": "exercise_angia", "correlation": 0.011400804453855449}, {"feature_x": "max_heart_rate", "feature_y": "exercise_angia", "correlation": -0.00011981871331720712}, {"feature_x": "old_peak", "feature_y": "exercise_angia", "correlation": -0.013175631226374947}, {"feature_x": "gender", "feature_y": "exercise_angia", "correlation": -0.026879936579640416}, {"feature_x": "chest_pain", "feature_y": "exercise_angia", "correlation": -0.04921606343440628}, {"feature_x": "fasting_blood_sugar", "feature_y": "exercise_angia", "correlation": 0.0066450537917914386}, {"feature_x": "resting_electro", "feature_y": "exercise_angia", "correlation": -0.055446771196809935}, {"feature_x": "exercise_angia", "feature_y": "exercise_angia", "correlation": 1.0}, {"feature_x": "slope", "feature_y": "exercise_angia", "correlation": -0.06892032074142684}, {"feature_x": "num_major_vessels", "feature_y": "exercise_angia", "correlation": -0.03265386941353085}, {"feature_x": "target", "feature_y": "exercise_angia", "correlation": -0.057443877050302544}, {"feature_x": "age", "feature_y": "slope", "correlation": -0.013181575295002764}, {"feature_x": "resting_bp", "feature_y": "slope", "correlation": 0.40167284700697126}, {"feature_x": "serum_cholesterol", "feature_y": "slope", "correlation": 0.1715956757563555}, {"feature_x": "max_heart_rate", "feature_y": "slope", "correlation": 0.21052903309518173}, {"feature_x": "old_peak", "feature_y": "slope", "correlation": 0.23624143452265334}, {"feature_x": "gender", "feature_y": "slope", "correlation": -0.0219905849980607}, {"feature_x": "chest_pain", "feature_y": "slope", "correlation": 0.46314205721035073}, {"feature_x": "fasting_blood_sugar", "feature_y": "slope", "correlation": 0.27389784784925475}, {"feature_x": "resting_electro", "feature_y": "slope", "correlation": 0.32326153807250135}, {"feature_x": "exercise_angia", "feature_y": "slope", "correlation": -0.06892032074142684}, {"feature_x": "slope", "feature_y": "slope", "correlation": 1.0}, {"feature_x": "num_major_vessels", "feature_y": "slope", "correlation": 0.536618494630404}, {"feature_x": "target", "feature_y": "slope", "correlation": 0.8054352346179698}, {"feature_x": "age", "feature_y": "num_major_vessels", "correlation": 0.008725681343453957}, {"feature_x": "resting_bp", "feature_y": "num_major_vessels", "correlation": 0.2502357827229213}, {"feature_x": "serum_cholesterol", "feature_y": "num_major_vessels", "correlation": 0.135776442251306}, {"feature_x": "max_heart_rate", "feature_y": "num_major_vessels", "correlation": 0.11150913373989908}, {"feature_x": "old_peak", "feature_y": "num_major_vessels", "correlation": 0.09093545514804488}, {"feature_x": "gender", "feature_y": "num_major_vessels", "correlation": 0.024658756798981243}, {"feature_x": "chest_pain", "feature_y": "num_major_vessels", "correlation": 0.27825434025528273}, {"feature_x": "fasting_blood_sugar", "feature_y": "num_major_vessels", "correlation": 0.18198403144042935}, {"feature_x": "resting_electro", "feature_y": "num_major_vessels", "correlation": 0.19489176932198574}, {"feature_x": "exercise_angia", "feature_y": "num_major_vessels", "correlation": -0.03265386941353085}, {"feature_x": "slope", "feature_y": "num_major_vessels", "correlation": 0.536618494630404}, {"feature_x": "num_major_vessels", "feature_y": "num_major_vessels", "correlation": 1.0}, {"feature_x": "target", "feature_y": "num_major_vessels", "correlation": 0.46993403097921915}, {"feature_x": "age", "feature_y": "target", "correlation": 0.01838269206219578}, {"feature_x": "resting_bp", "feature_y": "target", "correlation": 0.4799662628115955}, {"feature_x": "serum_cholesterol", "feature_y": "target", "correlation": 0.2066569519853056}, {"feature_x": "max_heart_rate", "feature_y": "target", "correlation": 0.2251191869707048}, {"feature_x": "old_peak", "feature_y": "target", "correlation": 0.12886230345229222}, {"feature_x": "gender", "feature_y": "target", "correlation": 0.0376238431249763}, {"feature_x": "chest_pain", "feature_y": "target", "correlation": 0.5297586934252609}, {"feature_x": "fasting_blood_sugar", "feature_y": "target", "correlation": 0.31729913293139694}, {"feature_x": "resting_electro", "feature_y": "target", "correlation": 0.40975734793364194}, {"feature_x": "exercise_angia", "feature_y": "target", "correlation": -0.057443877050302544}, {"feature_x": "slope", "feature_y": "target", "correlation": 0.8054352346179698}, {"feature_x": "num_major_vessels", "feature_y": "target", "correlation": 0.46993403097921915}, {"feature_x": "target", "feature_y": "target", "correlation": 1.0}]}}, {"mode": "vega-lite"});
-</script>
 </div>
 </div>
 </div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=68615445-d873-4d7a-9ed9-749ef2aa7154">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8e123f09">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><em>Figure 1: Correlation Heatmap for All Features</em></p>
+<h4 id="Initial-Data-Inspection">Initial Data Inspection<a class="anchor-link" href="#Initial-Data-Inspection">¶</a></h4><p>Basic inspection functions such as head, shape and info help understand the dataset’s structure. They show the first few rows, dimensions of the data and confirm that all 14 columns contain complete, non-null values.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9ba4317e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">heart</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">heart</span><span class="o">.</span><span class="n">info</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>(1000, 14)
+&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 1000 entries, 0 to 999
+Data columns (total 14 columns):
+ #   Column               Non-Null Count  Dtype  
+---  ------               --------------  -----  
+ 0   patient_id           1000 non-null   int64  
+ 1   age                  1000 non-null   int64  
+ 2   gender               1000 non-null   int64  
+ 3   chest_pain           1000 non-null   int64  
+ 4   resting_bp           1000 non-null   int64  
+ 5   serum_cholesterol    1000 non-null   int64  
+ 6   fasting_blood_sugar  1000 non-null   int64  
+ 7   resting_electro      1000 non-null   int64  
+ 8   max_heart_rate       1000 non-null   int64  
+ 9   exercise_angia       1000 non-null   int64  
+ 10  old_peak             1000 non-null   float64
+ 11  slope                1000 non-null   int64  
+ 12  num_major_vessels    1000 non-null   int64  
+ 13  target               1000 non-null   object 
+dtypes: float64(1), int64(12), object(1)
+memory usage: 109.5+ KB
+None
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=03ed2493">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="EDA">EDA<a class="anchor-link" href="#EDA">¶</a></h3>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e75e1702">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>This section provides a detailed exploration of the dataset, focusing on the distribution of features, relationships with the target variable and insights that support later preprocessing and modeling.</p>
 </div>
 </div>
 </div>
@@ -8382,11 +8114,11 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># summary statistics </span>
-<span class="n">summary</span> <span class="o">=</span> <span class="n">train_heart</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+<span class="n">summary</span> <span class="o">=</span> <span class="n">train_heart</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="s2">"all"</span><span class="p">)</span>
 <span class="n">summary</span>
 </pre></div>
 </div>
@@ -8398,7 +8130,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[9]:</div>
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[8]:</div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
 <div>
 <style scoped="">
@@ -8431,6 +8163,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <th>old_peak</th>
 <th>slope</th>
 <th>num_major_vessels</th>
+<th>target</th>
 </tr>
 </thead>
 <tbody>
@@ -8449,6 +8182,58 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <td>800.000000</td>
 <td>800.000000</td>
 <td>800.000000</td>
+<td>800</td>
+</tr>
+<tr>
+<th>unique</th>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>2</td>
+</tr>
+<tr>
+<th>top</th>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>Heart Disease</td>
+</tr>
+<tr>
+<th>freq</th>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>452</td>
 </tr>
 <tr>
 <th>mean</th>
@@ -8465,6 +8250,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <td>2.651625</td>
 <td>1.512500</td>
 <td>1.206250</td>
+<td>NaN</td>
 </tr>
 <tr>
 <th>std</th>
@@ -8481,6 +8267,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <td>1.720304</td>
 <td>1.019138</td>
 <td>0.975911</td>
+<td>NaN</td>
 </tr>
 <tr>
 <th>min</th>
@@ -8497,6 +8284,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <td>0.000000</td>
 <td>0.000000</td>
 <td>0.000000</td>
+<td>NaN</td>
 </tr>
 <tr>
 <th>25%</th>
@@ -8513,6 +8301,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <td>1.200000</td>
 <td>1.000000</td>
 <td>0.000000</td>
+<td>NaN</td>
 </tr>
 <tr>
 <th>50%</th>
@@ -8529,6 +8318,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <td>2.400000</td>
 <td>2.000000</td>
 <td>1.000000</td>
+<td>NaN</td>
 </tr>
 <tr>
 <th>75%</th>
@@ -8545,6 +8335,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <td>3.900000</td>
 <td>2.000000</td>
 <td>2.000000</td>
+<td>NaN</td>
 </tr>
 <tr>
 <th>max</th>
@@ -8561,6 +8352,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <td>6.200000</td>
 <td>3.000000</td>
 <td>3.000000</td>
+<td>NaN</td>
 </tr>
 </tbody>
 </table>
@@ -8597,7 +8389,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Compute counts and percentages grouped by target</span>
@@ -8640,26 +8432,26 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[10]:</div>
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[9]:</div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
 <style>
-  #altair-viz-bc039b7ba81b42ec9a8f5ebf52e5e32f.vega-embed {
+  #altair-viz-5ee9bb2f2fef413d91ff25f3fe329331.vega-embed {
     width: 100%;
     display: flex;
   }
 
-  #altair-viz-bc039b7ba81b42ec9a8f5ebf52e5e32f.vega-embed details,
-  #altair-viz-bc039b7ba81b42ec9a8f5ebf52e5e32f.vega-embed details summary {
+  #altair-viz-5ee9bb2f2fef413d91ff25f3fe329331.vega-embed details,
+  #altair-viz-5ee9bb2f2fef413d91ff25f3fe329331.vega-embed details summary {
     position: relative;
   }
 </style>
-<div id="altair-viz-bc039b7ba81b42ec9a8f5ebf52e5e32f"></div>
+<div id="altair-viz-5ee9bb2f2fef413d91ff25f3fe329331"></div>
 <script type="text/javascript">
   var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
   (function(spec, embedOpt){
     let outputDiv = document.currentScript.previousElementSibling;
-    if (outputDiv.id !== "altair-viz-bc039b7ba81b42ec9a8f5ebf52e5e32f") {
-      outputDiv = document.getElementById("altair-viz-bc039b7ba81b42ec9a8f5ebf52e5e32f");
+    if (outputDiv.id !== "altair-viz-5ee9bb2f2fef413d91ff25f3fe329331") {
+      outputDiv = document.getElementById("altair-viz-5ee9bb2f2fef413d91ff25f3fe329331");
     }
 
     const paths = {
@@ -8720,7 +8512,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><em>Figure 2: Distribution of Target Variable in Input Data</em></p>
+<p><em>Figure 1: Distribution of Target Variable in Input Data</em></p>
 </div>
 </div>
 </div>
@@ -8741,7 +8533,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">num_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'age'</span><span class="p">,</span> <span class="s1">'resting_bp'</span><span class="p">,</span> <span class="s1">'serum_cholesterol'</span><span class="p">,</span> <span class="s1">'max_heart_rate'</span><span class="p">,</span> <span class="s1">'old_peak'</span><span class="p">]</span>
@@ -8782,26 +8574,26 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[11]:</div>
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[10]:</div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
 <style>
-  #altair-viz-79635b34a5c94f3ca51ec8c86e011d26.vega-embed {
+  #altair-viz-9b21342ba65841f98c162f3ff89e96e3.vega-embed {
     width: 100%;
     display: flex;
   }
 
-  #altair-viz-79635b34a5c94f3ca51ec8c86e011d26.vega-embed details,
-  #altair-viz-79635b34a5c94f3ca51ec8c86e011d26.vega-embed details summary {
+  #altair-viz-9b21342ba65841f98c162f3ff89e96e3.vega-embed details,
+  #altair-viz-9b21342ba65841f98c162f3ff89e96e3.vega-embed details summary {
     position: relative;
   }
 </style>
-<div id="altair-viz-79635b34a5c94f3ca51ec8c86e011d26"></div>
+<div id="altair-viz-9b21342ba65841f98c162f3ff89e96e3"></div>
 <script type="text/javascript">
   var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
   (function(spec, embedOpt){
     let outputDiv = document.currentScript.previousElementSibling;
-    if (outputDiv.id !== "altair-viz-79635b34a5c94f3ca51ec8c86e011d26") {
-      outputDiv = document.getElementById("altair-viz-79635b34a5c94f3ca51ec8c86e011d26");
+    if (outputDiv.id !== "altair-viz-9b21342ba65841f98c162f3ff89e96e3") {
+      outputDiv = document.getElementById("altair-viz-9b21342ba65841f98c162f3ff89e96e3");
     }
 
     const paths = {
@@ -8862,7 +8654,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><em>Figure 3: Histograms of Numerical Features</em></p>
+<p><em>Figure 2: Histograms of Numerical Features</em></p>
 </div>
 </div>
 </div>
@@ -8883,7 +8675,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">charts</span> <span class="o">=</span> <span class="p">[]</span>
@@ -8919,26 +8711,26 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[12]:</div>
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[11]:</div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
 <style>
-  #altair-viz-4bdb34a4edab4cad8b1791c77e9f601d.vega-embed {
+  #altair-viz-71ebe9b0e508404ea92db202314d3090.vega-embed {
     width: 100%;
     display: flex;
   }
 
-  #altair-viz-4bdb34a4edab4cad8b1791c77e9f601d.vega-embed details,
-  #altair-viz-4bdb34a4edab4cad8b1791c77e9f601d.vega-embed details summary {
+  #altair-viz-71ebe9b0e508404ea92db202314d3090.vega-embed details,
+  #altair-viz-71ebe9b0e508404ea92db202314d3090.vega-embed details summary {
     position: relative;
   }
 </style>
-<div id="altair-viz-4bdb34a4edab4cad8b1791c77e9f601d"></div>
+<div id="altair-viz-71ebe9b0e508404ea92db202314d3090"></div>
 <script type="text/javascript">
   var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
   (function(spec, embedOpt){
     let outputDiv = document.currentScript.previousElementSibling;
-    if (outputDiv.id !== "altair-viz-4bdb34a4edab4cad8b1791c77e9f601d") {
-      outputDiv = document.getElementById("altair-viz-4bdb34a4edab4cad8b1791c77e9f601d");
+    if (outputDiv.id !== "altair-viz-71ebe9b0e508404ea92db202314d3090") {
+      outputDiv = document.getElementById("altair-viz-71ebe9b0e508404ea92db202314d3090");
     }
 
     const paths = {
@@ -8999,7 +8791,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><em>Figure 4: Boxplots of Numeric Features</em></p>
+<p><em>Figure 3: Boxplots of Numeric Features</em></p>
 </div>
 </div>
 </div>
@@ -9022,7 +8814,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">cat_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'gender'</span><span class="p">,</span><span class="s1">'chest_pain'</span><span class="p">,</span><span class="s1">'fasting_blood_sugar'</span><span class="p">,</span><span class="s1">'resting_electro'</span><span class="p">,</span><span class="s1">'exercise_angia'</span><span class="p">,</span><span class="s1">'slope'</span><span class="p">,</span><span class="s1">'num_major_vessels'</span><span class="p">]</span>
@@ -9071,26 +8863,26 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[13]:</div>
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[12]:</div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
 <style>
-  #altair-viz-6571584dbaf540dbbf9de8e5a866bcc1.vega-embed {
+  #altair-viz-5ec6f5a95905429a94ec9025cd30f390.vega-embed {
     width: 100%;
     display: flex;
   }
 
-  #altair-viz-6571584dbaf540dbbf9de8e5a866bcc1.vega-embed details,
-  #altair-viz-6571584dbaf540dbbf9de8e5a866bcc1.vega-embed details summary {
+  #altair-viz-5ec6f5a95905429a94ec9025cd30f390.vega-embed details,
+  #altair-viz-5ec6f5a95905429a94ec9025cd30f390.vega-embed details summary {
     position: relative;
   }
 </style>
-<div id="altair-viz-6571584dbaf540dbbf9de8e5a866bcc1"></div>
+<div id="altair-viz-5ec6f5a95905429a94ec9025cd30f390"></div>
 <script type="text/javascript">
   var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
   (function(spec, embedOpt){
     let outputDiv = document.currentScript.previousElementSibling;
-    if (outputDiv.id !== "altair-viz-6571584dbaf540dbbf9de8e5a866bcc1") {
-      outputDiv = document.getElementById("altair-viz-6571584dbaf540dbbf9de8e5a866bcc1");
+    if (outputDiv.id !== "altair-viz-5ec6f5a95905429a94ec9025cd30f390") {
+      outputDiv = document.getElementById("altair-viz-5ec6f5a95905429a94ec9025cd30f390");
     }
 
     const paths = {
@@ -9151,7 +8943,161 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><em>Figure 5: Distribution of Categorical Features</em></p>
+<p><em>Figure 4: Distribution of Categorical Features</em></p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=94b57888">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h4 id="Correlation-Heatmap">Correlation Heatmap<a class="anchor-link" href="#Correlation-Heatmap">¶</a></h4><p>A correlation matrix is computed and visualized using a heatmap to show linear relationships among features. This helps detect multicollinearity and highlights variables that may have strong predictive relationships with the target.</p>
+<p>Darker blue cells represent stronger positive correlations, while darker red cells represent stronger negative correlations. From the heatmap, the feature slope has the strongest positive relationship with the target, followed by chest pain, resting BP, and number of major vessels. This means these features are more likely to influence whether someone has heart disease. On the other hand, features like age, gender, and exercise angia show very low or almost no correlation with the target, suggesting they don’t have a strong direct relationship with the target. It can also be seen that some features are related to each other. For example, number of major vessels and slope have a moderate positive correlation.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=126a7f5a">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">train_heart_corr</span> <span class="o">=</span> <span class="n">train_heart</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">train_heart_corr</span><span class="p">[</span><span class="s1">'target'</span><span class="p">]</span> <span class="o">=</span> <span class="n">train_heart_corr</span><span class="p">[</span><span class="s1">'target'</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">({</span>
+    <span class="s1">'Heart Disease'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">'No Heart Disease'</span><span class="p">:</span> <span class="mi">0</span>
+<span class="p">})</span>
+
+<span class="n">corr_matrix</span> <span class="o">=</span> <span class="n">train_heart_corr</span><span class="p">[</span><span class="n">num_cols</span> <span class="o">+</span> <span class="n">cat_cols</span> <span class="o">+</span> <span class="p">[</span><span class="s1">'target'</span><span class="p">]]</span><span class="o">.</span><span class="n">corr</span><span class="p">()</span>
+
+<span class="n">corr_long</span> <span class="o">=</span> <span class="n">corr_matrix</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">id_vars</span><span class="o">=</span><span class="s1">'index'</span><span class="p">)</span>
+<span class="n">corr_long</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'feature_x'</span><span class="p">,</span> <span class="s1">'feature_y'</span><span class="p">,</span> <span class="s1">'correlation'</span><span class="p">]</span>
+
+<span class="n">base</span> <span class="o">=</span> <span class="n">alt</span><span class="o">.</span><span class="n">Chart</span><span class="p">(</span><span class="n">corr_long</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">X</span><span class="p">(</span><span class="s1">'feature_x:N'</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">'Feature'</span><span class="p">),</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Y</span><span class="p">(</span><span class="s1">'feature_y:N'</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">'Feature'</span><span class="p">))</span>
+
+<span class="n">heatmap</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">mark_rect</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+    <span class="n">color</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Color</span><span class="p">(</span>
+        <span class="s1">'correlation:Q'</span><span class="p">,</span>
+        <span class="n">scale</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Scale</span><span class="p">(</span><span class="n">scheme</span><span class="o">=</span><span class="s1">'redblue'</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])),</span>
+    <span class="n">tooltip</span><span class="o">=</span><span class="p">[</span><span class="s1">'feature_x'</span><span class="p">,</span> <span class="s1">'feature_y'</span><span class="p">])</span>
+
+<span class="n">text</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">mark_text</span><span class="p">(</span>
+    <span class="n">fontSize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s1">'black'</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+    <span class="n">text</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Text</span><span class="p">(</span><span class="s1">'correlation:Q'</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">'.2f'</span><span class="p">))</span>
+
+<span class="n">final_chart</span> <span class="o">=</span> <span class="p">(</span><span class="n">heatmap</span> <span class="o">+</span> <span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">properties</span><span class="p">(</span>
+    <span class="n">title</span><span class="o">=</span><span class="s1">'Correlation Heatmap of All Features with Target'</span><span class="p">,</span>
+    <span class="n">width</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+    <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span>
+
+<span class="n">final_chart</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>/var/folders/bg/zng_zmg54gnb747wxry6915h0000gn/T/ipykernel_575/449586020.py:2: FutureWarning: Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+  train_heart_corr['target'] = train_heart_corr['target'].replace({
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[13]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<style>
+  #altair-viz-30b86b768045479fb580bf07e2f5da96.vega-embed {
+    width: 100%;
+    display: flex;
+  }
+
+  #altair-viz-30b86b768045479fb580bf07e2f5da96.vega-embed details,
+  #altair-viz-30b86b768045479fb580bf07e2f5da96.vega-embed details summary {
+    position: relative;
+  }
+</style>
+<div id="altair-viz-30b86b768045479fb580bf07e2f5da96"></div>
+<script type="text/javascript">
+  var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
+  (function(spec, embedOpt){
+    let outputDiv = document.currentScript.previousElementSibling;
+    if (outputDiv.id !== "altair-viz-30b86b768045479fb580bf07e2f5da96") {
+      outputDiv = document.getElementById("altair-viz-30b86b768045479fb580bf07e2f5da96");
+    }
+
+    const paths = {
+      "vega": "https://cdn.jsdelivr.net/npm/vega@5?noext",
+      "vega-lib": "https://cdn.jsdelivr.net/npm/vega-lib?noext",
+      "vega-lite": "https://cdn.jsdelivr.net/npm/vega-lite@5.20.1?noext",
+      "vega-embed": "https://cdn.jsdelivr.net/npm/vega-embed@6?noext",
+    };
+
+    function maybeLoadScript(lib, version) {
+      var key = `${lib.replace("-", "")}_version`;
+      return (VEGA_DEBUG[key] == version) ?
+        Promise.resolve(paths[lib]) :
+        new Promise(function(resolve, reject) {
+          var s = document.createElement('script');
+          document.getElementsByTagName("head")[0].appendChild(s);
+          s.async = true;
+          s.onload = () => {
+            VEGA_DEBUG[key] = version;
+            return resolve(paths[lib]);
+          };
+          s.onerror = () => reject(`Error loading script: ${paths[lib]}`);
+          s.src = paths[lib];
+        });
+    }
+
+    function showError(err) {
+      outputDiv.innerHTML = `<div class="error" style="color:red;">${err}</div>`;
+      throw err;
+    }
+
+    function displayChart(vegaEmbed) {
+      vegaEmbed(outputDiv, spec, embedOpt)
+        .catch(err => showError(`Javascript Error: ${err.message}<br>This usually means there's a typo in your chart specification. See the javascript console for the full traceback.`));
+    }
+
+    if(typeof define === "function" && define.amd) {
+      requirejs.config({paths});
+      let deps = ["vega-embed"];
+      require(deps, displayChart, err => showError(`Error loading script: ${err.message}`));
+    } else {
+      maybeLoadScript("vega", "5")
+        .then(() => maybeLoadScript("vega-lite", "5.20.1"))
+        .then(() => maybeLoadScript("vega-embed", "6"))
+        .catch(showError)
+        .then(() => displayChart(vegaEmbed));
+    }
+  })({"config": {"view": {"continuousWidth": 300, "continuousHeight": 300}}, "layer": [{"mark": {"type": "rect"}, "encoding": {"color": {"field": "correlation", "scale": {"domain": [-1, 1], "scheme": "redblue"}, "type": "quantitative"}, "tooltip": [{"field": "feature_x", "type": "nominal"}, {"field": "feature_y", "type": "nominal"}], "x": {"field": "feature_x", "title": "Feature", "type": "nominal"}, "y": {"field": "feature_y", "title": "Feature", "type": "nominal"}}}, {"mark": {"type": "text", "color": "black", "fontSize": 12}, "encoding": {"text": {"field": "correlation", "format": ".2f", "type": "quantitative"}, "x": {"field": "feature_x", "title": "Feature", "type": "nominal"}, "y": {"field": "feature_y", "title": "Feature", "type": "nominal"}}}], "data": {"name": "data-95230c2013d3fc4bbdae65a45fe08ff7"}, "height": 600, "title": "Correlation Heatmap of All Features with Target", "width": 600, "$schema": "https://vega.github.io/schema/vega-lite/v5.20.1.json", "datasets": {"data-95230c2013d3fc4bbdae65a45fe08ff7": [{"feature_x": "age", "feature_y": "age", "correlation": 1.0}, {"feature_x": "resting_bp", "feature_y": "age", "correlation": -0.012372283682296531}, {"feature_x": "serum_cholesterol", "feature_y": "age", "correlation": 0.020224765990922294}, {"feature_x": "max_heart_rate", "feature_y": "age", "correlation": -0.03503469014355346}, {"feature_x": "old_peak", "feature_y": "age", "correlation": -0.022305174552808907}, {"feature_x": "gender", "feature_y": "age", "correlation": -0.02287783279359308}, {"feature_x": "chest_pain", "feature_y": "age", "correlation": 0.054900623917686985}, {"feature_x": "fasting_blood_sugar", "feature_y": "age", "correlation": 0.044983531503913585}, {"feature_x": "resting_electro", "feature_y": "age", "correlation": 0.09263713087844284}, {"feature_x": "exercise_angia", "feature_y": "age", "correlation": -0.040010603110309594}, {"feature_x": "slope", "feature_y": "age", "correlation": -0.013181575295002721}, {"feature_x": "num_major_vessels", "feature_y": "age", "correlation": 0.008725681343453985}, {"feature_x": "target", "feature_y": "age", "correlation": 0.018382692062195803}, {"feature_x": "age", "feature_y": "resting_bp", "correlation": -0.012372283682296531}, {"feature_x": "resting_bp", "feature_y": "resting_bp", "correlation": 1.0}, {"feature_x": "serum_cholesterol", "feature_y": "resting_bp", "correlation": 0.14566246921808543}, {"feature_x": "max_heart_rate", "feature_y": "resting_bp", "correlation": 0.1035419946561038}, {"feature_x": "old_peak", "feature_y": "resting_bp", "correlation": 0.023081906216186252}, {"feature_x": "gender", "feature_y": "resting_bp", "correlation": -0.09046913218891135}, {"feature_x": "chest_pain", "feature_y": "resting_bp", "correlation": 0.22690766750621685}, {"feature_x": "fasting_blood_sugar", "feature_y": "resting_bp", "correlation": 0.2181336226920223}, {"feature_x": "resting_electro", "feature_y": "resting_bp", "correlation": 0.21715341181251122}, {"feature_x": "exercise_angia", "feature_y": "resting_bp", "correlation": -0.03880892333459974}, {"feature_x": "slope", "feature_y": "resting_bp", "correlation": 0.40167284700697115}, {"feature_x": "num_major_vessels", "feature_y": "resting_bp", "correlation": 0.2502357827229213}, {"feature_x": "target", "feature_y": "resting_bp", "correlation": 0.47996626281159543}, {"feature_x": "age", "feature_y": "serum_cholesterol", "correlation": 0.020224765990922294}, {"feature_x": "resting_bp", "feature_y": "serum_cholesterol", "correlation": 0.14566246921808543}, {"feature_x": "serum_cholesterol", "feature_y": "serum_cholesterol", "correlation": 1.0}, {"feature_x": "max_heart_rate", "feature_y": "serum_cholesterol", "correlation": 0.05346590851242518}, {"feature_x": "old_peak", "feature_y": "serum_cholesterol", "correlation": -0.01845655556855414}, {"feature_x": "gender", "feature_y": "serum_cholesterol", "correlation": -0.12902307841640168}, {"feature_x": "chest_pain", "feature_y": "serum_cholesterol", "correlation": 0.16786353528405057}, {"feature_x": "fasting_blood_sugar", "feature_y": "serum_cholesterol", "correlation": 0.2940707014297925}, {"feature_x": "resting_electro", "feature_y": "serum_cholesterol", "correlation": 0.1243060957832304}, {"feature_x": "exercise_angia", "feature_y": "serum_cholesterol", "correlation": 0.011400804453855442}, {"feature_x": "slope", "feature_y": "serum_cholesterol", "correlation": 0.17159567575635554}, {"feature_x": "num_major_vessels", "feature_y": "serum_cholesterol", "correlation": 0.13577644225130608}, {"feature_x": "target", "feature_y": "serum_cholesterol", "correlation": 0.20665695198530554}, {"feature_x": "age", "feature_y": "max_heart_rate", "correlation": -0.03503469014355346}, {"feature_x": "resting_bp", "feature_y": "max_heart_rate", "correlation": 0.1035419946561038}, {"feature_x": "serum_cholesterol", "feature_y": "max_heart_rate", "correlation": 0.05346590851242518}, {"feature_x": "max_heart_rate", "feature_y": "max_heart_rate", "correlation": 1.0}, {"feature_x": "old_peak", "feature_y": "max_heart_rate", "correlation": 0.039982533237256056}, {"feature_x": "gender", "feature_y": "max_heart_rate", "correlation": 0.05492465141086416}, {"feature_x": "chest_pain", "feature_y": "max_heart_rate", "correlation": 0.10423329420831273}, {"feature_x": "fasting_blood_sugar", "feature_y": "max_heart_rate", "correlation": 0.09594822993247025}, {"feature_x": "resting_electro", "feature_y": "max_heart_rate", "correlation": 0.08235854766114974}, {"feature_x": "exercise_angia", "feature_y": "max_heart_rate", "correlation": -0.00011981871331721965}, {"feature_x": "slope", "feature_y": "max_heart_rate", "correlation": 0.21052903309518176}, {"feature_x": "num_major_vessels", "feature_y": "max_heart_rate", "correlation": 0.11150913373989911}, {"feature_x": "target", "feature_y": "max_heart_rate", "correlation": 0.22511918697070482}, {"feature_x": "age", "feature_y": "old_peak", "correlation": -0.022305174552808907}, {"feature_x": "resting_bp", "feature_y": "old_peak", "correlation": 0.023081906216186252}, {"feature_x": "serum_cholesterol", "feature_y": "old_peak", "correlation": -0.01845655556855414}, {"feature_x": "max_heart_rate", "feature_y": "old_peak", "correlation": 0.039982533237256056}, {"feature_x": "old_peak", "feature_y": "old_peak", "correlation": 1.0}, {"feature_x": "gender", "feature_y": "old_peak", "correlation": 0.3201949594036567}, {"feature_x": "chest_pain", "feature_y": "old_peak", "correlation": 0.10138037572095526}, {"feature_x": "fasting_blood_sugar", "feature_y": "old_peak", "correlation": 0.02880753444696548}, {"feature_x": "resting_electro", "feature_y": "old_peak", "correlation": 0.044935459664635115}, {"feature_x": "exercise_angia", "feature_y": "old_peak", "correlation": -0.013175631226374936}, {"feature_x": "slope", "feature_y": "old_peak", "correlation": 0.23624143452265334}, {"feature_x": "num_major_vessels", "feature_y": "old_peak", "correlation": 0.09093545514804481}, {"feature_x": "target", "feature_y": "old_peak", "correlation": 0.1288623034522922}, {"feature_x": "age", "feature_y": "gender", "correlation": -0.02287783279359308}, {"feature_x": "resting_bp", "feature_y": "gender", "correlation": -0.09046913218891135}, {"feature_x": "serum_cholesterol", "feature_y": "gender", "correlation": -0.12902307841640168}, {"feature_x": "max_heart_rate", "feature_y": "gender", "correlation": 0.05492465141086416}, {"feature_x": "old_peak", "feature_y": "gender", "correlation": 0.3201949594036567}, {"feature_x": "gender", "feature_y": "gender", "correlation": 1.0}, {"feature_x": "chest_pain", "feature_y": "gender", "correlation": 0.05101743513084097}, {"feature_x": "fasting_blood_sugar", "feature_y": "gender", "correlation": 0.01622381611047284}, {"feature_x": "resting_electro", "feature_y": "gender", "correlation": -0.037075667413575306}, {"feature_x": "exercise_angia", "feature_y": "gender", "correlation": -0.026879936579640405}, {"feature_x": "slope", "feature_y": "gender", "correlation": -0.021990584998060718}, {"feature_x": "num_major_vessels", "feature_y": "gender", "correlation": 0.024658756798981236}, {"feature_x": "target", "feature_y": "gender", "correlation": 0.03762384312497629}, {"feature_x": "age", "feature_y": "chest_pain", "correlation": 0.054900623917686985}, {"feature_x": "resting_bp", "feature_y": "chest_pain", "correlation": 0.22690766750621685}, {"feature_x": "serum_cholesterol", "feature_y": "chest_pain", "correlation": 0.16786353528405057}, {"feature_x": "max_heart_rate", "feature_y": "chest_pain", "correlation": 0.10423329420831273}, {"feature_x": "old_peak", "feature_y": "chest_pain", "correlation": 0.10138037572095526}, {"feature_x": "gender", "feature_y": "chest_pain", "correlation": 0.05101743513084097}, {"feature_x": "chest_pain", "feature_y": "chest_pain", "correlation": 1.0}, {"feature_x": "fasting_blood_sugar", "feature_y": "chest_pain", "correlation": 0.21557657915127143}, {"feature_x": "resting_electro", "feature_y": "chest_pain", "correlation": 0.2198027771222162}, {"feature_x": "exercise_angia", "feature_y": "chest_pain", "correlation": -0.049216063434406286}, {"feature_x": "slope", "feature_y": "chest_pain", "correlation": 0.4631420572103509}, {"feature_x": "num_major_vessels", "feature_y": "chest_pain", "correlation": 0.27825434025528273}, {"feature_x": "target", "feature_y": "chest_pain", "correlation": 0.5297586934252608}, {"feature_x": "age", "feature_y": "fasting_blood_sugar", "correlation": 0.044983531503913585}, {"feature_x": "resting_bp", "feature_y": "fasting_blood_sugar", "correlation": 0.2181336226920223}, {"feature_x": "serum_cholesterol", "feature_y": "fasting_blood_sugar", "correlation": 0.2940707014297925}, {"feature_x": "max_heart_rate", "feature_y": "fasting_blood_sugar", "correlation": 0.09594822993247025}, {"feature_x": "old_peak", "feature_y": "fasting_blood_sugar", "correlation": 0.02880753444696548}, {"feature_x": "gender", "feature_y": "fasting_blood_sugar", "correlation": 0.01622381611047284}, {"feature_x": "chest_pain", "feature_y": "fasting_blood_sugar", "correlation": 0.21557657915127143}, {"feature_x": "fasting_blood_sugar", "feature_y": "fasting_blood_sugar", "correlation": 1.0}, {"feature_x": "resting_electro", "feature_y": "fasting_blood_sugar", "correlation": 0.1689447076277483}, {"feature_x": "exercise_angia", "feature_y": "fasting_blood_sugar", "correlation": 0.006645053791791431}, {"feature_x": "slope", "feature_y": "fasting_blood_sugar", "correlation": 0.27389784784925486}, {"feature_x": "num_major_vessels", "feature_y": "fasting_blood_sugar", "correlation": 0.18198403144042938}, {"feature_x": "target", "feature_y": "fasting_blood_sugar", "correlation": 0.31729913293139683}, {"feature_x": "age", "feature_y": "resting_electro", "correlation": 0.09263713087844284}, {"feature_x": "resting_bp", "feature_y": "resting_electro", "correlation": 0.21715341181251122}, {"feature_x": "serum_cholesterol", "feature_y": "resting_electro", "correlation": 0.1243060957832304}, {"feature_x": "max_heart_rate", "feature_y": "resting_electro", "correlation": 0.08235854766114974}, {"feature_x": "old_peak", "feature_y": "resting_electro", "correlation": 0.044935459664635115}, {"feature_x": "gender", "feature_y": "resting_electro", "correlation": -0.037075667413575306}, {"feature_x": "chest_pain", "feature_y": "resting_electro", "correlation": 0.2198027771222162}, {"feature_x": "fasting_blood_sugar", "feature_y": "resting_electro", "correlation": 0.1689447076277483}, {"feature_x": "resting_electro", "feature_y": "resting_electro", "correlation": 1.0}, {"feature_x": "exercise_angia", "feature_y": "resting_electro", "correlation": -0.055446771196809935}, {"feature_x": "slope", "feature_y": "resting_electro", "correlation": 0.3232615380725015}, {"feature_x": "num_major_vessels", "feature_y": "resting_electro", "correlation": 0.19489176932198574}, {"feature_x": "target", "feature_y": "resting_electro", "correlation": 0.40975734793364194}, {"feature_x": "age", "feature_y": "exercise_angia", "correlation": -0.040010603110309594}, {"feature_x": "resting_bp", "feature_y": "exercise_angia", "correlation": -0.03880892333459974}, {"feature_x": "serum_cholesterol", "feature_y": "exercise_angia", "correlation": 0.011400804453855442}, {"feature_x": "max_heart_rate", "feature_y": "exercise_angia", "correlation": -0.00011981871331721965}, {"feature_x": "old_peak", "feature_y": "exercise_angia", "correlation": -0.013175631226374936}, {"feature_x": "gender", "feature_y": "exercise_angia", "correlation": -0.026879936579640405}, {"feature_x": "chest_pain", "feature_y": "exercise_angia", "correlation": -0.049216063434406286}, {"feature_x": "fasting_blood_sugar", "feature_y": "exercise_angia", "correlation": 0.006645053791791431}, {"feature_x": "resting_electro", "feature_y": "exercise_angia", "correlation": -0.055446771196809935}, {"feature_x": "exercise_angia", "feature_y": "exercise_angia", "correlation": 1.0}, {"feature_x": "slope", "feature_y": "exercise_angia", "correlation": -0.06892032074142684}, {"feature_x": "num_major_vessels", "feature_y": "exercise_angia", "correlation": -0.03265386941353088}, {"feature_x": "target", "feature_y": "exercise_angia", "correlation": -0.05744387705030255}, {"feature_x": "age", "feature_y": "slope", "correlation": -0.013181575295002721}, {"feature_x": "resting_bp", "feature_y": "slope", "correlation": 0.40167284700697115}, {"feature_x": "serum_cholesterol", "feature_y": "slope", "correlation": 0.17159567575635554}, {"feature_x": "max_heart_rate", "feature_y": "slope", "correlation": 0.21052903309518176}, {"feature_x": "old_peak", "feature_y": "slope", "correlation": 0.23624143452265334}, {"feature_x": "gender", "feature_y": "slope", "correlation": -0.021990584998060718}, {"feature_x": "chest_pain", "feature_y": "slope", "correlation": 0.4631420572103509}, {"feature_x": "fasting_blood_sugar", "feature_y": "slope", "correlation": 0.27389784784925486}, {"feature_x": "resting_electro", "feature_y": "slope", "correlation": 0.3232615380725015}, {"feature_x": "exercise_angia", "feature_y": "slope", "correlation": -0.06892032074142684}, {"feature_x": "slope", "feature_y": "slope", "correlation": 1.0}, {"feature_x": "num_major_vessels", "feature_y": "slope", "correlation": 0.5366184946304041}, {"feature_x": "target", "feature_y": "slope", "correlation": 0.8054352346179698}, {"feature_x": "age", "feature_y": "num_major_vessels", "correlation": 0.008725681343453985}, {"feature_x": "resting_bp", "feature_y": "num_major_vessels", "correlation": 0.2502357827229213}, {"feature_x": "serum_cholesterol", "feature_y": "num_major_vessels", "correlation": 0.13577644225130608}, {"feature_x": "max_heart_rate", "feature_y": "num_major_vessels", "correlation": 0.11150913373989911}, {"feature_x": "old_peak", "feature_y": "num_major_vessels", "correlation": 0.09093545514804481}, {"feature_x": "gender", "feature_y": "num_major_vessels", "correlation": 0.024658756798981236}, {"feature_x": "chest_pain", "feature_y": "num_major_vessels", "correlation": 0.27825434025528273}, {"feature_x": "fasting_blood_sugar", "feature_y": "num_major_vessels", "correlation": 0.18198403144042938}, {"feature_x": "resting_electro", "feature_y": "num_major_vessels", "correlation": 0.19489176932198574}, {"feature_x": "exercise_angia", "feature_y": "num_major_vessels", "correlation": -0.03265386941353088}, {"feature_x": "slope", "feature_y": "num_major_vessels", "correlation": 0.5366184946304041}, {"feature_x": "num_major_vessels", "feature_y": "num_major_vessels", "correlation": 1.0}, {"feature_x": "target", "feature_y": "num_major_vessels", "correlation": 0.4699340309792193}, {"feature_x": "age", "feature_y": "target", "correlation": 0.018382692062195803}, {"feature_x": "resting_bp", "feature_y": "target", "correlation": 0.47996626281159543}, {"feature_x": "serum_cholesterol", "feature_y": "target", "correlation": 0.20665695198530554}, {"feature_x": "max_heart_rate", "feature_y": "target", "correlation": 0.22511918697070482}, {"feature_x": "old_peak", "feature_y": "target", "correlation": 0.1288623034522922}, {"feature_x": "gender", "feature_y": "target", "correlation": 0.03762384312497629}, {"feature_x": "chest_pain", "feature_y": "target", "correlation": 0.5297586934252608}, {"feature_x": "fasting_blood_sugar", "feature_y": "target", "correlation": 0.31729913293139683}, {"feature_x": "resting_electro", "feature_y": "target", "correlation": 0.40975734793364194}, {"feature_x": "exercise_angia", "feature_y": "target", "correlation": -0.05744387705030255}, {"feature_x": "slope", "feature_y": "target", "correlation": 0.8054352346179698}, {"feature_x": "num_major_vessels", "feature_y": "target", "correlation": 0.4699340309792193}, {"feature_x": "target", "feature_y": "target", "correlation": 1.0}]}}, {"mode": "vega-lite"});
+</script>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3008625d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><em>Figure 5: Correlation Heatmap for All Features</em></p>
 </div>
 </div>
 </div>
@@ -9183,7 +9129,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 </thead>
 <tbody>
 <tr>
-<td>patientid</td>
+<td>patient_id</td>
 <td>drop</td>
 <td>Unique identifier for each patient. Not predictive, so removed from modeling.</td>
 </tr>
@@ -9193,17 +9139,17 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <td>A numeric feature with no missing values, ranging from 20 to 80. Scaling is recommended due to its distinct range compared to other numeric features.</td>
 </tr>
 <tr>
-<td>chestpain</td>
+<td>chest_pain</td>
 <td>one-hot encoding</td>
 <td>categorical column with no missing values</td>
 </tr>
 <tr>
-<td>exerciseangia</td>
+<td>exercise_angia</td>
 <td>Passthrough (binary)</td>
 <td>Categorical column kept as it is and will be handled by the model directly</td>
 </tr>
 <tr>
-<td>fastingbloodsugar</td>
+<td>fasting_blood_sugar</td>
 <td>Passthrough (binary)</td>
 <td>Categorical column kept as it is and will be handled by the model directly</td>
 </tr>
@@ -9213,32 +9159,32 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <td>Categorical column kept as it is and will be handled by the model directly</td>
 </tr>
 <tr>
-<td>maxheartrate</td>
+<td>max_heart_rate</td>
 <td>scaling with <code>StandardScaler</code></td>
 <td>A numeric feature with no missing values, ranging from 20 to 80. Scaling is recommended due to its distinct range compared to other numeric features.</td>
 </tr>
 <tr>
-<td>noofmajorvessels</td>
+<td>num_major_vessels</td>
 <td>scaling with<code>StandardScaler</code></td>
 <td>A numeric feature with no missing values, ranging from 0 to 3. Scaling is recommended due to its distinct range compared to other numeric features.</td>
 </tr>
 <tr>
-<td>oldpeak</td>
+<td>old_peak</td>
 <td>scaling with <code>StandardScaler</code></td>
 <td>A numeric feature with no missing values, ranging from 0 to 3. Scaling is recommended due to its distinct range compared to other numeric features.</td>
 </tr>
 <tr>
-<td>restingBP</td>
+<td>resting_bp</td>
 <td>scaling with <code>StandardScaler</code></td>
 <td>A numeric feature with no missing values, ranging from 94 to 200. Scaling is recommended due to its distinct range compared to other numeric features.</td>
 </tr>
 <tr>
-<td>restingelectro</td>
+<td>resting_electro</td>
 <td>one-hot encoding</td>
 <td>categorical column with no missing values</td>
 </tr>
 <tr>
-<td>serumcholestrol</td>
+<td>serum_cholesterol</td>
 <td>scaling with <code>StandardScaler</code></td>
 <td>A numeric feature with no missing values, ranging from 0 to 602. Scaling is recommended due to its distinct range compared to other numeric features.</td>
 </tr>
@@ -9288,8 +9234,8 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <span class="n">X_test</span> <span class="o">=</span> <span class="n">test_heart</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'target'</span><span class="p">])</span>
 <span class="n">y_test</span> <span class="o">=</span> <span class="n">test_heart</span><span class="p">[</span><span class="s1">'target'</span><span class="p">]</span>
 
-<span class="n">X_train</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">'./data/processed/X_train_heart.csv'</span><span class="p">)</span> <span class="c1"># updated csv file name</span>
-<span class="n">X_test</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">'./data/processed/X_test_heart.csv'</span><span class="p">)</span> <span class="c1"># updated csv file name</span>
+<span class="n">X_train</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">'../data/processed/train_data.csv'</span><span class="p">)</span>
+<span class="n">X_test</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">'../data/processed/test_data.csv'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -9535,7 +9481,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
 <div class="jp-InputPrompt jp-InputArea-prompt">In [17]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">X_train_preprocessed</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">'./data/processed/X_train_preprocessed.csv'</span><span class="p">)</span> 
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">X_train_preprocessed</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">'../data/processed/train_preprocessed.csv'</span><span class="p">)</span>
 
 <span class="n">X_test_preprocessed</span> <span class="o">=</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
 <span class="n">column_names</span> <span class="o">=</span> <span class="p">(</span>
@@ -9544,7 +9490,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\pandera\backends\pandas\base.py:1
  <span class="o">+</span> <span class="n">binary</span>
  <span class="o">+</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">named_transformers_</span><span class="p">[</span><span class="s1">'onehotencoder'</span><span class="p">]</span><span class="o">.</span><span class="n">get_feature_names_out</span><span class="p">(</span><span class="n">ohe</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
 <span class="n">X_test_preprocessed</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X_test_preprocessed</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="n">column_names</span><span class="p">)</span>
-<span class="n">X_test_preprocessed</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">'./data/processed/X_test_preprocessed.csv'</span><span class="p">)</span> 
+<span class="n">X_test_preprocessed</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">'../data/processed/test_preprocessed.csv'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -9635,7 +9581,7 @@ $$</p>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [25]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [19]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">models</span> <span class="o">=</span> <span class="p">{</span>
@@ -9652,7 +9598,7 @@ $$</p>
 
     <span class="n">results_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">mean_std_cross_val_scores</span><span class="p">(</span>
         <span class="n">pipe</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">return_train_score</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">scoring</span><span class="o">=</span><span class="n">make_scorer</span><span class="p">(</span><span class="n">fbeta_score</span><span class="p">,</span> <span class="n">pos_label</span><span class="o">=</span><span class="s2">"Heart Disease"</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">scoring</span><span class="o">=</span><span class="n">make_scorer</span><span class="p">(</span><span class="n">fbeta_score</span><span class="p">,</span> <span class="n">pos_label</span><span class="o">=</span><span class="s1">'Heart Disease'</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
     
 <span class="n">results_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">results_dict</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
 <span class="n">results_df</span>
@@ -9666,7 +9612,7 @@ $$</p>
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[25]:</div>
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[19]:</div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
 <div>
 <style scoped="">
@@ -9695,29 +9641,29 @@ $$</p>
 <tbody>
 <tr>
 <th>dummy clf</th>
-<td>0.042 (+/- 0.010)</td>
-<td>0.034 (+/- 0.007)</td>
+<td>0.003 (+/- 0.001)</td>
+<td>0.002 (+/- 0.000)</td>
 <td>0.867 (+/- 0.002)</td>
 <td>0.867 (+/- 0.000)</td>
 </tr>
 <tr>
 <th>decision tree</th>
-<td>0.065 (+/- 0.021)</td>
-<td>0.054 (+/- 0.024)</td>
+<td>0.004 (+/- 0.000)</td>
+<td>0.002 (+/- 0.000)</td>
 <td>0.956 (+/- 0.013)</td>
 <td>1.000 (+/- 0.000)</td>
 </tr>
 <tr>
 <th>Logistic Regression</th>
-<td>0.394 (+/- 0.559)</td>
-<td>0.062 (+/- 0.032)</td>
+<td>0.005 (+/- 0.001)</td>
+<td>0.002 (+/- 0.000)</td>
 <td>0.958 (+/- 0.012)</td>
 <td>0.971 (+/- 0.005)</td>
 </tr>
 <tr>
 <th>RBF SVM</th>
-<td>0.065 (+/- 0.019)</td>
-<td>0.048 (+/- 0.015)</td>
+<td>0.005 (+/- 0.000)</td>
+<td>0.003 (+/- 0.000)</td>
 <td>0.964 (+/- 0.010)</td>
 <td>0.987 (+/- 0.004)</td>
 </tr>
@@ -9755,7 +9701,7 @@ $$</p>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [26]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [20]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">tree_param_dist</span> <span class="o">=</span> <span class="p">{</span>
@@ -9763,7 +9709,7 @@ $$</p>
 <span class="p">}</span>
 <span class="n">tree_model</span> <span class="o">=</span> <span class="n">make_pipeline</span><span class="p">(</span><span class="n">preprocessor</span><span class="p">,</span> <span class="n">DecisionTreeClassifier</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">))</span>
 <span class="n">search_tree</span> <span class="o">=</span> <span class="n">RandomizedSearchCV</span><span class="p">(</span><span class="n">tree_model</span><span class="p">,</span> <span class="n">tree_param_dist</span><span class="p">,</span> <span class="n">return_train_score</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                 <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="n">make_scorer</span><span class="p">(</span><span class="n">fbeta_score</span><span class="p">,</span> <span class="n">pos_label</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+                                 <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="n">make_scorer</span><span class="p">(</span><span class="n">fbeta_score</span><span class="p">,</span> <span class="n">pos_label</span><span class="o">=</span><span class="s1">'Heart Disease'</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
 <span class="n">search_tree</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
 <span class="n">search_tree</span><span class="o">.</span><span class="n">best_params_</span><span class="p">,</span> <span class="n">search_tree</span><span class="o">.</span><span class="n">best_score_</span>
 </pre></div>
@@ -9775,20 +9721,10 @@ $$</p>
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>C:\Users\Omowunmi\miniforge3\Lib\site-packages\sklearn\model_selection\_search.py:1135: UserWarning: One or more of the test scores are non-finite: [nan nan nan nan nan nan nan nan nan nan]
-  warnings.warn(
-C:\Users\Omowunmi\miniforge3\Lib\site-packages\sklearn\model_selection\_search.py:1135: UserWarning: One or more of the train scores are non-finite: [nan nan nan nan nan nan nan nan nan nan]
-  warnings.warn(
-</pre>
-</div>
-</div>
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[26]:</div>
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[20]:</div>
 <div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
-<pre>({'decisiontreeclassifier__max_depth': 1}, nan)</pre>
+<pre>({'decisiontreeclassifier__max_depth': 4}, 0.9660130871140866)</pre>
 </div>
 </div>
 </div>
@@ -9798,7 +9734,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\sklearn\model_selection\_search.p
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [27]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [21]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">logistic_param_dist</span> <span class="o">=</span> <span class="p">{</span>
@@ -9807,7 +9743,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\sklearn\model_selection\_search.p
 <span class="p">}</span>
 <span class="n">log_model</span> <span class="o">=</span> <span class="n">make_pipeline</span><span class="p">(</span><span class="n">preprocessor</span><span class="p">,</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">))</span>
 <span class="n">search_log</span> <span class="o">=</span> <span class="n">RandomizedSearchCV</span><span class="p">(</span><span class="n">log_model</span><span class="p">,</span> <span class="n">logistic_param_dist</span><span class="p">,</span> <span class="n">return_train_score</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                 <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="n">make_scorer</span><span class="p">(</span><span class="n">fbeta_score</span><span class="p">,</span> <span class="n">pos_label</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+                                 <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="n">make_scorer</span><span class="p">(</span><span class="n">fbeta_score</span><span class="p">,</span> <span class="n">pos_label</span><span class="o">=</span><span class="s1">'Heart Disease'</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
 <span class="n">search_log</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
 <span class="n">search_log</span><span class="o">.</span><span class="n">best_params_</span><span class="p">,</span> <span class="n">search_log</span><span class="o">.</span><span class="n">best_score_</span>
 </pre></div>
@@ -9819,20 +9755,11 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\sklearn\model_selection\_search.p
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>C:\Users\Omowunmi\miniforge3\Lib\site-packages\sklearn\model_selection\_search.py:1135: UserWarning: One or more of the test scores are non-finite: [nan nan nan nan nan nan nan nan nan nan]
-  warnings.warn(
-C:\Users\Omowunmi\miniforge3\Lib\site-packages\sklearn\model_selection\_search.py:1135: UserWarning: One or more of the train scores are non-finite: [nan nan nan nan nan nan nan nan nan nan]
-  warnings.warn(
-</pre>
-</div>
-</div>
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[27]:</div>
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[21]:</div>
 <div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
-<pre>({'logisticregression__max_iter': 100, 'logisticregression__C': 0.01}, nan)</pre>
+<pre>({'logisticregression__max_iter': 100, 'logisticregression__C': 0.1},
+ 0.9602223627705779)</pre>
 </div>
 </div>
 </div>
@@ -9842,7 +9769,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\sklearn\model_selection\_search.p
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [28]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [22]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">SVM_param_dist</span> <span class="o">=</span> <span class="p">{</span>
@@ -9851,7 +9778,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\sklearn\model_selection\_search.p
 <span class="p">}</span>
 <span class="n">svm_model</span> <span class="o">=</span> <span class="n">make_pipeline</span><span class="p">(</span><span class="n">preprocessor</span><span class="p">,</span> <span class="n">SVC</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">))</span>
 <span class="n">search_svm</span> <span class="o">=</span> <span class="n">RandomizedSearchCV</span><span class="p">(</span><span class="n">svm_model</span><span class="p">,</span> <span class="n">SVM_param_dist</span><span class="p">,</span> <span class="n">return_train_score</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                 <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="n">make_scorer</span><span class="p">(</span><span class="n">fbeta_score</span><span class="p">,</span> <span class="n">pos_label</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+                                 <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="n">make_scorer</span><span class="p">(</span><span class="n">fbeta_score</span><span class="p">,</span> <span class="n">pos_label</span><span class="o">=</span><span class="s1">'Heart Disease'</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
 <span class="n">search_svm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
 <span class="n">search_svm</span><span class="o">.</span><span class="n">best_params_</span><span class="p">,</span> <span class="n">search_svm</span><span class="o">.</span><span class="n">best_score_</span>
 </pre></div>
@@ -9863,20 +9790,10 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\sklearn\model_selection\_search.p
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>C:\Users\Omowunmi\miniforge3\Lib\site-packages\sklearn\model_selection\_search.py:1135: UserWarning: One or more of the test scores are non-finite: [nan nan nan nan nan nan nan nan nan nan]
-  warnings.warn(
-C:\Users\Omowunmi\miniforge3\Lib\site-packages\sklearn\model_selection\_search.py:1135: UserWarning: One or more of the train scores are non-finite: [nan nan nan nan nan nan nan nan nan nan]
-  warnings.warn(
-</pre>
-</div>
-</div>
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[28]:</div>
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[22]:</div>
 <div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
-<pre>({'svc__gamma': 10.0, 'svc__C': 0.01}, nan)</pre>
+<pre>({'svc__gamma': 0.001, 'svc__C': 10.0}, 0.95438901605904)</pre>
 </div>
 </div>
 </div>
@@ -9886,7 +9803,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\sklearn\model_selection\_search.p
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [29]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [23]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1">#Build Final Models with Best Parameters</span>
@@ -9903,7 +9820,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\sklearn\model_selection\_search.p
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[29]:</div>
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[23]:</div>
 <div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
 <pre>0.98</pre>
 </div>
@@ -9915,7 +9832,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\sklearn\model_selection\_search.p
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [30]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [24]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">cm</span> <span class="o">=</span> <span class="n">ConfusionMatrixDisplay</span><span class="o">.</span><span class="n">from_estimator</span><span class="p">(</span>
@@ -9981,7 +9898,7 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\sklearn\model_selection\_search.p
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <p>There has been extensive work that has been conducted prior to reaching the final model selection. We had preprocessed the data, did a preliminary EDA, checked the cross-validation for the three different models and finally used RandomizedSearchCV to get the best parameters and scores for each model. The results indicate that the SVM model with RBF gave a best validation score of 0.9646, which is slightly better than the scores of the other two models. Our final step was to build the best model using the best parameters and then fit on training data and score on the test. Surprisingly, the final test score was 0.98, which is greater than the validation score we achieved.</p>
-<p>There are two possible reasons which could have led to this result. One could be that the test data contained examples which were similar to the training set and as a result the test score was better. This is the likely reason as we ensured throughout the entire coding process to have the test data kept seperate from the training and validation sets. There was no leakage of information from the test set to the training set, as per the steps illustrated in this report. The second reason that is less likely but important to also consider is that we do not have enough data in the test to substantiate it as a good proxy for how unseen data would be. We maintained the 70-30 split for training and testing data, which was our pre-decided split size, so we still think that the first reason might be a better explanation for such high score.</p>
+<p>There are two possible reasons which could have led to this result. One could be that the test data contained examples which were similar to the training set and as a result the test score was better. This is the likely reason as we ensured throughout the entire coding process to have the test data kept seperate from the training and validation sets. There was no leakage of information from the test set to the training set, as per the steps illustrated in this report. The second reason that is less likely but important to also consider is that we do not have enough data in the test to substantiate it as a good proxy for how unseen data would be. We maintained the 80-20 split for training and testing data, which was our pre-decided split size, so we still think that the first reason might be a better explanation for such high score.</p>
 <p><strong>Conclusion</strong></p>
 <p>So, putting all of the results and analysis together, the selected model is the SVM with RBF model with hyperparameters C=1 and gamma=0.1. Since, our predictions are conducted over whether an individual is going to get heart disease or not, we must ensure that there is as minimal false negatives as possible. From the confusion matrix created for visualization, we can rest assured the the false negatives are not a matter of issue for SVM model. All in all, SVM with RBF model is most appropriate for our binary classification problem.</p>
 </div>
@@ -10025,20 +9942,6 @@ C:\Users\Omowunmi\miniforge3\Lib\site-packages\sklearn\model_selection\_search.p
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=7d52566f-f41f-44d3-9c17-8fc2543a6155">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-</div>
 </div>
 </div>
 </div>
