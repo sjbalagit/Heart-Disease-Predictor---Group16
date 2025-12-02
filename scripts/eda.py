@@ -185,8 +185,4 @@ def plot_categorical_vs_target(df, axis_titles):
         )
         charts.append(chart)
 
-    rows = []
-    for i in range(0, len(charts), 2):
-        rows.append(alt.hconcat(*charts[i : i + 2]))
-
-    return alt.vconcat(*rows).configure_legend(orient="top")
+    
