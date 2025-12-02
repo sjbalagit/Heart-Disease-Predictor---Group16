@@ -20,3 +20,20 @@ def load_data(path):
     return pd.read_csv(path)
 
 
+def compute_summary_statistics(df):
+    """
+    Compute summary statistics for the dataset.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Input dataset.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Summary statistics including numerical and categorical features.
+    """
+    return df.describe(include="all")
+
+
