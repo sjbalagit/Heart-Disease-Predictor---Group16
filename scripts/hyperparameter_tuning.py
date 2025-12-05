@@ -99,6 +99,13 @@ def main(X_train_path, y_train_path, X_test_path, y_test_path, preprocessor_path
     with open(os.path.join(results_to, "heart_final_model.pickle"), 'wb') as f:
         pickle.dump(final_model, f)
 
+    cm = ConfusionMatrixDisplay.from_estimator(
+    final_model,
+    X_test,
+    y_test
+    )
+    cm.to_png(os.path.join(results_to, "confusion_matrix.png"))
+
 
 if __name__ == '__main__':
     main()
