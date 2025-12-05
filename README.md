@@ -39,7 +39,31 @@ docker compose up
 
 ![Host URL Sample](./images/host_url_sample.png)
 
-3. To run the analysis, open `./heart_disease_analysis.ipynb` in Jupyter Lab you just launched and under the "Kernel" menu click "Restart Kernel and Run All Cells...".
+3. To run the analysis, open a terminal and run the preprocessing, EDA, and model evaluation scripts in order as provided.
+
+```
+# Step 1: Preprocess data
+python scripts/preprocessing.py \
+    --raw-data data/raw/train.csv \
+    --data-to data/processed \
+    --preprocessor-to results/models \
+    --seed 123
+
+# Step 2: Generate EDA plots
+python scripts/eda_cli.py \
+    --data data/processed/train_heart.csv \
+    --output-dir results/eda_results
+
+# Step 3: Evaluate models
+python scripts/evaluate_default_models.py \
+    --X_train_path data/processed/X_train.csv \
+    --y_train_path data/processed/y_train.csv \
+    --preprocessor_path results/models/preprocessor.pkl \
+    --pos_label "Heart Disease" \
+    --beta 2.0 \
+    --random-state 123 \
+    --results results/CV_scores_default_parameters.csv
+```
 
 ### Clean up
 
