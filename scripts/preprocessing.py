@@ -79,7 +79,7 @@ def main(raw_data, data_to, preprocessor_to, seed):
 
     heart_preprocessor = make_column_transformer(
             (StandardScaler(), numerical),
-            (OneHotEncoder(), ohe),
+            (OneHotEncoder(sparse_output=False), ohe),
             (OrdinalEncoder(), ordinal),
             ('passthrough', binary),
             ('drop', drop)
