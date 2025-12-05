@@ -1,6 +1,7 @@
 import os
 import zipfile
 import requests
+import warnings
 
 def read_zip(url, directory, filename = None):
     """
@@ -65,5 +66,5 @@ def read_zip(url, directory, filename = None):
         filename = os.path.join(directory, filename)
         current_timestamp = os.path.getmtime(filename)
         current_timestamps.append(current_timestamp)
-    if (len(current_files) == len(original_files)) & (original_timestamps == current_timestamps):
-        raise ValueError('The ZIP file is empty.')
+    if set(current_files) == set(original_files):
+        warnings.warn("The ZIP file is empty or nothing new was extracted. This could be due to a previous ZIP being downloaded again.", UserWarning)
