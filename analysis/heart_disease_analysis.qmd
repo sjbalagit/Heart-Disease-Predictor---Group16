@@ -77,7 +77,7 @@ The dataset is split into training (80%) and testing (20%) subsets to support un
 
 ### Data Validation
 
-
+To ensure data integrity, the dataset was successfully read and validated against a predefined pandera @niels_bantilan-proc-scipy-2020 schema, confirming that the file format, column names, and data types were consistent with analysis requirements. The validation process verified the absence of duplicate records or empty observations. Specific columns like slope and serum_cholesterol triggered warnings for zero-values and potential outliers. These anomalous values were addressed through imputation in the source dataset. We scaled the features to effectively capture the outliers rather than removing them to preserve data volume. Finally, we renamed the target labels to "Heart Disease" and "No Heart Disease" from binary encoding of 1 and 0 and inspected feature distributions and correlations. The results confirmed that no anomalous relationships exist that would impact modeling.
 
 
 ### Exploratory Data Analysis
@@ -142,27 +142,6 @@ Darker blue cells represent stronger positive correlations, while darker red cel
 
 _Figure 5: Correlation Heatmap for All Features_
 
-#### Summary of Feature Transformations
-
-Each feature is assigned an appropriate preprocessing method: numerical features are scaled using StandardScaler, categorical features are one-hot encoded and the patient ID is removed since it has no predictive value. This ensures the data is model-ready.
-
-| Feature | Transformation | Explanation |
-| --- | ----------- | ----- |
-| patient_id | drop | Unique identifier for each patient. Not predictive, so removed from modeling. |
-| age | scaling with `StandardScaler` |  A numeric feature with no missing values, ranging from 20 to 80. Scaling is recommended due to its distinct range compared to other numeric features.|
-| chest_pain | one-hot encoding |  categorical column with no missing values |
-| exercise_angia | Passthrough (binary) |  Categorical column kept as it is and will be handled by the model directly|
-| fasting_blood_sugar | Passthrough (binary) | Categorical column kept as it is and will be handled by the model directly|
-| gender | Passthrough (binary) | Categorical column kept as it is and will be handled by the model directly|
-| max_heart_rate | scaling with `StandardScaler`  | A numeric feature with no missing values, ranging from 20 to 80. Scaling is recommended due to its distinct range compared to other numeric features.|
-| num_major_vessels | scaling with`StandardScaler` | A numeric feature with no missing values, ranging from 0 to 3. Scaling is recommended due to its distinct range compared to other numeric features.|
-| old_peak | scaling with `StandardScaler` | A numeric feature with no missing values, ranging from 0 to 3. Scaling is recommended due to its distinct range compared to other numeric features.|
-| resting_bp | scaling with `StandardScaler` | A numeric feature with no missing values, ranging from 94 to 200. Scaling is recommended due to its distinct range compared to other numeric features. |
-| resting_electro | one-hot encoding| categorical column with no missing values|
-| serum_cholesterol |  scaling with `StandardScaler` | A numeric feature with no missing values, ranging from 0 to 602. Scaling is recommended due to its distinct range compared to other numeric features.| 
-| slope |  ordinal encoding with `OrdinalEncoder` | categorical column with an ordinal relation among the features |
-
-_Table 3: Preprocessing for the columns_
 
 **2.2 Data Prep: Splitting target column and feature column cleanup**
 
