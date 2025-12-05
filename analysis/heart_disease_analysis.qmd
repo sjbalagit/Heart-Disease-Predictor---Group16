@@ -1,0 +1,229 @@
+---
+title: Heart Disease Risk Prediction and Early-Stage Heart Disease detection
+author:
+  - Sarisha Das
+  - Mantram Sharma
+  - Omowunmi Obadero
+  - Shrabanti Bala Joya
+date: "06 December 2025"
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .qmd
+      format_name: quarto
+      format_version: '1.0'
+      jupytext_version: 1.17.3
+  kernelspec:
+    display_name: Python [conda env:base] *
+    language: python
+    name: conda-base-py
+format:
+  html:
+    toc: true
+    number-sections: true
+    toc-depth: 3
+  pdf:
+    toc: true
+    number-sections: true
+    toc-depth: 3
+execute:
+  echo: false
+  warning: false
+  message: false
+bibliography: references.bib
+link-citations: true
+---
+
+
+# Summary
+
+We wish to create a simple machine learning classification model which can help us predict high risk individuals for heart disease. We try three methods: Decision Tree Classifier, Logistic Regression and Support Vector Machine with Radial Basis Function (RBF) Kernel to use 14 common features related to heart disease to make the predictions. Here we aimed to find the best model that predicts whether an individual is at risk of developing heart disease based on their clinical features, enabling early identification and prevention measures. 
+
+We have selected F2 score as our primary performance metric since our primary goal is to minimize False Negatives - cases where patients at risk of heart disease are incorrectly identified as healthy. The final classifier SVM RBF performed reasonably well on the unseen test dataset, achieving an F2 score (β = 2) of **replace with inline code 0.9646** and an overall accuracy of **replace with inline code 0.98**. Out of the 200 test data cases, it correctly predicted 196 and misclassified 4, which are all False Positives - predicting that a patient is at risk of developing heart disease when they are in fact healthy. False positives are not as dangerous as False Negatives. Although they could theoretically cause the patient to undergo unnecessary treatment if the model is used as a decision tool, we expect there to be additional decision layers which can mitigate this. As such, we believe this model serves as a valuable decision-support tool, assisting medical professionals in identifying high-risk individuals for closer monitoring and timely intervention.
+
+# Introduction
+
+According to the American Heart Association @aha_ischemic,Heart disease, or Coronary Artery Disease is a condition in which narrowed coronary arteries reduce blood flow to the heart. This can lead to heart attack - where the heart can stop working, and in many cases leaves a very narrow window of time for responsive action. Data from the World Health Organization @who_leading_causes shows that, in India, a country of approximately 1.4 billion people, heart disease has consistently been the leading cause of death over the past decade (2010–2020) for both genders.
+
+Cardiovascular diseases or CVDs account for about 31% of all deaths, according to the latest Sample Registration System report (Press Trust of India, 2025). India’s age-standardized CVD death rate is estimated at 272 per 100,000, significantly higher than the global average of approximately 235 per 100,000 @Prabhakaran2016. 
+
+If high-risk individuals can be identified before clinical events such as heart attacks, early interventions like the few recommended by the National Heart, Lung, and Blood Institute @nhlbi_chd_treatment can reduce mortality rate. The list includes simple lifestyle changes, to medicines like statins which can reduce plaque buildup, to medical procedures in necessary cases.
+
+Since traditional diagnosis often depends on physician expertise, subjective assessment, and resource-intensive tests, a data-driven predictive model could therefore help identify patients who are more prone to such events, especially in resource-limited settings @GUPTA2018S419.
+
+Thus, even minor improvements or supplementary methods in early detection could make a meaningful difference in population health. In this project, we attempt to use measurable, structured features to identify high-risk cases, enabling more careful monitoring and earlier preventive measures.
+
+# Methods
+
+## Data
+
+The dataset contains 1000 unique examples and 14 features containing information on the individuals cholesterol, blood pressure and fasting blood sugar. We are using 13 features and dropping the patient ID feature for our analysis. The target variable indicates whether a patient has 'heart disease' or 'no heart disease'. The dataset has **no missing values**.
+
+This dataset has been obtained from Doppala and Bhattacharyya @Doppala2021. It was collected at a multispecialty hospital in India. The original source provides detailed descriptions for all variables, along with summary statistics for the numerical features. The details can be found [here](https://github.com/sjbalagit/Heart-Disease-Predictor---Group16/blob/main/data/raw/Cardiovascular_Disease_Dataset/Cardiovascular_Disease_Dataset_Description.pdf).
+
+## Analysis
+
+### Data Cleaning & Preprocessing
+
+We will read and save the data from the url to the data folder.
+
+
+
+_Table 1: Raw Input Data - First 5 Rows_
+
+
+The dataset is split into training (80%) and testing (20%) subsets to support unbiased modeling. Using a fixed random state ensures that the split is reproducible. EDA is performed on the training data to prevent information leakage.
+
+
+### Data Validation
+
+
+
+
+### Exploratory Data Analysis
+
+This section provides a detailed exploration of the dataset, focusing on the distribution of features, relationships with the target variable and insights that support later preprocessing and modeling.
+
+#### Summary Statistics
+
+Descriptive statistics are generated to understand the range, central tendencies and variability of each numerical feature. This helps identify unusual values, potential outliers and general data distribution patterns.
+
+
+_Table 2: Summary Statistics of Input Data_
+
+#### Visualizing Target Distribution
+
+A bar chart is created to show the number of patients with and without heart disease. This visualization highlights if the dataset is balanced or skewed, which is important for model performance and evaluation. 
+
+The bar chart shows that heart disease is more common than non-heart disease in the dataset, with 398 cases of heart disease compared to 302 without heart disease. Although there is an imbalance between the levels but this level of imbalance is not substantial and is unlikely to affect the model negatively.
+
+
+_Figure 1: Distribution of Target Variable in Input Data_
+
+#### Distribution of Numerical Features
+
+Histograms are used to visualize the distribution of numerical variables such as age, resting blood pressure and cholesterol. These plots help identify skewness, outliers and typical value ranges within the dataset.
+
+From the distributions of the continuous feature below, it can be observed that none of the features follow a normal distribution. Age is spread out evenly across the entire range, so there isn’t one age group that dominates the dataset. Resting blood pressure is mostly clustered around the middle values, with fewer people having very high readings, which makes it slightly right-skewed. Serum cholesterol is right-skewed; a lot of people have lower cholesterol values, and only a few fall into the very high range. Max heart rate,is in the opposite direction and is slightly left-skewed, which means that more people reach higher heart rate values than lower ones. Lastly, oldpeak is also right-skewed, with most patients showing very low values and only a small number having higher values.
+
+
+
+_Figure 2: Histograms of Numerical Features_
+
+#### Boxplots of Numerical Features vs Target
+
+Boxplots compare each numerical feature across the two target classes. They reveal patterns or differences, for example, whether higher blood pressure or older age is more common among patients with heart disease.
+
+The boxplots show how people with heart disease differ from those without it. From the age chart, people with heart disease are generally older, while younger people mostly fall in the no heart disease group. For resting blood pressure, those with heart disease tend to have slightly higher values, showing that high blood pressure may be linked to heart disease. Although there are outliers for no heart disease, this means that some individuals have high blood pressure but do not have heart disease. The boxplot for serum cholesterol shows that the cholesterol levels are a bit higher and more spread out among people who have heart disease. The maximum heart rate chart shows that people without heart disease reach higher heart rates, while those with heart disease have lower maximum heart rates. This usually means their heart cannot handle as much physical stress. Oldpeak is higher in people with heart disease, which means their heart experiences more stress changes. 
+
+
+_Figure 3: Boxplots of Numeric Features_
+
+#### Categorical Features vs Target
+
+Grouped bar charts are used to compare categorical variables (e.g., gender, chest pain type) against the target variable. This identifies category-level patterns and helps determine how these features relate to heart disease.
+
+The gender chart shows that more males were diagnosed with heart disease compared to females. The chest-pain chart shows that more people with typical chest pain have no heart disease, while Atypical and non-anginal chest pain tend to have higher heart-disease counts. Also, asymptomatic patients appear less among healthy individuals and more among those with heart disease.
+
+For fasting blood sugar, most people fall in the normal range, and the heart-disease group is only slightly higher than the no-disease group. In the high blood-sugar category, the numbers are low for both, but individuals with heart disease are significantly higher than those without heart disease.
+
+People without heart disease are more in the normal ECG category, while people with heart disease are more in the ST-T Abnormality and LVH categories. Exercise-induced angina clearly shows that people with chest pain during exercise are much more likely to have heart disease. The number of major blood vessels chart shows that people with a higher number of vessels tend to have higher heart disease counts. Finally, the slope of the ST segment shows that certain ECG patterns, like a flat or down-sloping ST, are more common in those with heart disease.
+
+
+
+_Figure 4: Distribution of Categorical Features_
+
+#### Correlation Heatmap
+
+A correlation matrix is computed and visualized using a heatmap to show linear relationships among features. This helps detect multicollinearity and highlights variables that may have strong predictive relationships with the target.
+
+Darker blue cells represent stronger positive correlations, while darker red cells represent stronger negative correlations. From the heatmap, the feature slope has the strongest positive relationship with the target, followed by chest pain, resting BP, and number of major vessels. This means these features are more likely to influence whether someone has heart disease. On the other hand, features like age, gender, and exercise angia show very low or almost no correlation with the target, suggesting they don’t have a strong direct relationship with the target. It can also be seen that some features are related to each other. For example, number of major vessels and slope have a moderate positive correlation.
+
+
+_Figure 5: Correlation Heatmap for All Features_
+
+#### Summary of Feature Transformations
+
+Each feature is assigned an appropriate preprocessing method: numerical features are scaled using StandardScaler, categorical features are one-hot encoded and the patient ID is removed since it has no predictive value. This ensures the data is model-ready.
+
+| Feature | Transformation | Explanation |
+| --- | ----------- | ----- |
+| patient_id | drop | Unique identifier for each patient. Not predictive, so removed from modeling. |
+| age | scaling with `StandardScaler` |  A numeric feature with no missing values, ranging from 20 to 80. Scaling is recommended due to its distinct range compared to other numeric features.|
+| chest_pain | one-hot encoding |  categorical column with no missing values |
+| exercise_angia | Passthrough (binary) |  Categorical column kept as it is and will be handled by the model directly|
+| fasting_blood_sugar | Passthrough (binary) | Categorical column kept as it is and will be handled by the model directly|
+| gender | Passthrough (binary) | Categorical column kept as it is and will be handled by the model directly|
+| max_heart_rate | scaling with `StandardScaler`  | A numeric feature with no missing values, ranging from 20 to 80. Scaling is recommended due to its distinct range compared to other numeric features.|
+| num_major_vessels | scaling with`StandardScaler` | A numeric feature with no missing values, ranging from 0 to 3. Scaling is recommended due to its distinct range compared to other numeric features.|
+| old_peak | scaling with `StandardScaler` | A numeric feature with no missing values, ranging from 0 to 3. Scaling is recommended due to its distinct range compared to other numeric features.|
+| resting_bp | scaling with `StandardScaler` | A numeric feature with no missing values, ranging from 94 to 200. Scaling is recommended due to its distinct range compared to other numeric features. |
+| resting_electro | one-hot encoding| categorical column with no missing values|
+| serum_cholesterol |  scaling with `StandardScaler` | A numeric feature with no missing values, ranging from 0 to 602. Scaling is recommended due to its distinct range compared to other numeric features.| 
+| slope |  ordinal encoding with `OrdinalEncoder` | categorical column with an ordinal relation among the features |
+
+_Table 3: Preprocessing for the columns_
+
+**2.2 Data Prep: Splitting target column and feature column cleanup**
+
+Before we start working on anything we will separate the test data from the training data to avoid violating the golden rule.
+
+
+
+We can now clean up the data according to the criteria for each column.
+
+
+
+We can view the first 5 rows of the preprocessed data to have an idea of what we are going to input into our model.
+
+
+
+_Table 4 Preprocessed columns_
+
+
+**2.3 Scoring Metric**
+
+We will select the F2 score for checking the performance of the model since this is a medical problem and we reason that false negatives are much more harmful than false positives, and we wish to catch as many possible cases as we can. Choosing the F2 score will enable us to measure precision and recall instead of accuracy, and give recall a 2x weight so that we try to reduce false negatives as much as possible.
+
+$$
+F_{\beta} = (1+\beta^2) . \frac{precision \times recall}{\beta^2 precision + recall}
+$$
+
+with $\beta = 2$ will give us the F2 score.
+
+**2.4 Model Tuning**
+
+We will be looking at three models: Logistic Regression, Support Vector Machine (SVM) and Decision Tree Classifier. We have attributed the `mean_std_cross_val_score` function from DSCI571 to get a summary of the mean and standard deviation for the cross validation scores from each model. Based on these results, we can use RandomizedSearchCV for each model to tune their main hyperparameters.
+
+
+
+
+_Table 5: 5-fold CV scores for different models with default parameters_
+
+Above, we have the cross validation scores for each model with no hyperparameters specified, so now we can move ahead and specify a parameter grid over which our RandomizedSearchCV can search for the best parameters. We have particularly decided to do this process over all the models to see how the f2 score compare for the best parameters.
+
+
+
+
+
+
+
+
+
+
+_Figure 6:  Confusion matrix of model performance on test data._
+
+# 4. Results and Discussion
+
+**Final model selection**
+
+There has been extensive work that has been conducted prior to reaching the final model selection. We had preprocessed the data, did a preliminary EDA, checked the cross-validation for the three different models and finally used RandomizedSearchCV to get the best parameters and scores for each model. The results indicate that the SVM model with RBF gave a best validation score of 0.9646, which is slightly better than the scores of the other two models. Our final step was to build the best model using the best parameters and then fit on training data and score on the test. Surprisingly, the final test score was 0.98, which is greater than the validation score we achieved. 
+
+There are two possible reasons which could have led to this result. One could be that the test data contained examples which were similar to the training set and as a result the test score was better. This is the likely reason as we ensured throughout the entire coding process to have the test data kept seperate from the training and validation sets. There was no leakage of information from the test set to the training set, as per the steps illustrated in this report. The second reason that is less likely but important to also consider is that we do not have enough data in the test to substantiate it as a good proxy for how unseen data would be. We maintained the 80-20 split for training and testing data, which was our pre-decided split size, so we still think that the first reason might be a better explanation for such high score. 
+
+# 5. Conclusion
+
+So, putting all of the results and analysis together, the selected model is the SVM with RBF model with hyperparameters C=1 and gamma=0.1. Since, our predictions are conducted over whether an individual is going to get heart disease or not, we must ensure that there is as minimal false negatives as possible. From the confusion matrix created for visualization, we can rest assured the the false negatives are not a matter of issue for SVM model. All in all, SVM with RBF model is most appropriate for our binary classification problem.
+
+# 6. References
+
