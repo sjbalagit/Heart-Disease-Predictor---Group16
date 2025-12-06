@@ -15,8 +15,6 @@ from sklearn.metrics import fbeta_score, make_scorer
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
-from sklearn.metrics import ConfusionMatrixDisplay
-from joblib import dump
 
 @click.command()
 @click.option('--train-data', required=True, help='Path to train data CSV')
@@ -95,15 +93,14 @@ def main(train_data, target_col, preprocessor_path, pos_label, beta, seed, resul
     final_model = model_summary[best_model][0]
     final_model.fit(X_train, y_train)
     
+    os.makedirs(results_to, exist_ok=True)
     with open(os.path.join(results_to, "final_model.pickle"), 'wb') as f:
         pickle.dump(final_model, f)
 
     # Save models and results
     results_df = pd.DataFrame(results_dict).T
     results_df.columns = ['F2 Score', 'Best Model Parameters']
-    os.makedirs(results_to, exist_ok=True)
-    
-    results_df.to_csv(os.path.join(results_to, "hyperparameter_model_results.csv"), index=False)
+    results_df.to_csv(os.path.join(results_to, "hyperparameter_model_results.csv"), index=True)
 
 if __name__ == '__main__':
     main()  
