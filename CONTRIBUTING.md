@@ -85,7 +85,7 @@ conda env export --from-history > environment.yml
 
 > Note: Manually make sure to add version numbers from the environment to the created yml file
 
-5. Use Conda-lock to solve and lock the updated environment. I'm using Linux-64 because that's the operating system of my docker image
+5. Use Conda-lock to solve and lock the updated environment. We are using Linux-64 because that's the operating system of our docker image:
 
 ```
     conda-lock lock --file environment.yml
@@ -93,7 +93,7 @@ conda env export --from-history > environment.yml
 ```
 #### Update Docker Build
 
-6. Re-build the docker image in root directory and use the updated container locally. Please replace {YOUR-IMAGE-NAME} with some meaningful name for your local container. If you think this new dependency should be included in my repository, please make a pull request and I'll push this new image on my docker hub.
+6. Re-build the docker image from the project root directory using a meaningful name (replace {YOUR-IMAGE-NAME} accordingly) and use the updated container locally. If you believe this new dependency should be included in the project repository, please open a pull request and we'll update the Docker image on Docker Hub
 
 ```
     docker build --tag {YOUR-IMAGE-NAME} .
@@ -111,8 +111,6 @@ conda env export --from-history > environment.yml
 ## Report Bugs
 
 Report bugs at <https://github.com/sjbalagit/Heart-Disease-Predictor---Group16/issues>.
-
-**If you are reporting a bug, please follow the template guidelines.**
 
 ## Fix Bugs
 
