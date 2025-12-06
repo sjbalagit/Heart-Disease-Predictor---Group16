@@ -50,9 +50,15 @@ def main(raw_data, data_to, preprocessor_to, seed, split):
     train_heart.to_csv(os.path.join(data_to, "train_heart.csv"), index=False)
     test_heart.to_csv(os.path.join(data_to, "test_heart.csv"), index=False)
 
+    train_targets = train_heart['target']
+    train_heart = train_heart.drop(columns = ['target'])
+
+    test_targets = test_heart['target']
+    test_heart = test_heart.drop(columns = ['target'])
+
     # Column definitions
     binary = ["gender", "fasting_blood_sugar", "exercise_angina"]
-    passthrough = ["target"]
+    target = ["target"]
     ohe = ["chest_pain", "resting_electro"]
     numerical = [
         "age",
@@ -69,7 +75,7 @@ def main(raw_data, data_to, preprocessor_to, seed, split):
             (StandardScaler(), numerical),
             (OneHotEncoder(sparse_output=False), ohe),
             (OrdinalEncoder(), ordinal),
-            ('passthrough', binary+passthrough),
+            ('passthrough', binary),
             ('drop', drop)
         )
     
@@ -82,10 +88,19 @@ def main(raw_data, data_to, preprocessor_to, seed, split):
     heart_train_preprocessed = heart_preprocessor.fit_transform(train_heart)
     heart_test_preprocessed = heart_preprocessor.transform(test_heart)
 
-    heart_train_preprocessed.to_csv(os.path.join(
-        data_to, "heart_train_preprocessed.csv"), index=False)
-    heart_test_preprocessed.to_csv(os.path.join(
-        data_to, "heart_test_preprocessed.csv"), index=False)
+    # Add train target back
+    heart_train_preprocessed["target"] = train_targets.values
+
+    # Add test target back
+    heart_test_preprocessed["target"] = test_targets.values
+
+    # Save processed data with target included
+    heart_train_preprocessed.to_csv(
+        os.path.join(data_to, "heart_train_preprocessed.csv"), index=False
+    )
+    heart_test_preprocessed.to_csv(
+        os.path.join(data_to, "heart_test_preprocessed.csv"), index=False
+    )
 
 if __name__ == '__main__':
     main()
