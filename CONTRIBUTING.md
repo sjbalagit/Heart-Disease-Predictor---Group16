@@ -57,37 +57,93 @@ Create a conda environment called "YOURENV" using the "conda-lock.yml" by runnin
 ```
 conda-lock install -n YOURENV conda-lock.yml
 ```
-### Activate the conda environment
+#### Change the local environment
 
-Run the command below in terminal to activate the environment.
+1. Run the command below in terminal to activate the environment.
 
 ```
 conda activate YOURENV
 ```
 
-To update a single package to the latest version compatible with the version constraints in the source, run in your terminal:
+2. To update a single package to the latest version compatible with the version constraints in the source, run in your terminal:
 
 ```
 conda-lock lock  --lockfile conda-lock.yml --update PACKAGE
 ```
 
-To re-solve the entire environment, e.g. after changing a version constraint in the source file, run:
+3. To re-solve the entire environment, e.g. after changing a version constraint in the source file, run:
 
 ```
 conda-lock -f environment.yml --lockfile conda-lock.yml
 ```
 
-At root directory, update environment.yml using:
+4. At root directory, update environment.yml using:
 
 ```
 conda env export --from-history > environment.yml
 ```
 
-### Code of Conduct
+> Note: Manually make sure to add version numbers from the environment to the created yml file
+
+5. Use Conda-lock to solve and lock the updated environment. I'm using Linux-64 because that's the operating system of my docker image
+
+```
+    conda-lock lock --file environment.yml
+    conda-lock -k explicit --file environment.yml -p linux-64
+```
+#### Update Docker Build
+
+6. Re-build the docker image in root directory and use the updated container locally. Please replace {YOUR-IMAGE-NAME} with some meaningful name for your local container. If you think this new dependency should be included in my repository, please make a pull request and I'll push this new image on my docker hub.
+
+```
+    docker build --tag {YOUR-IMAGE-NAME} .
+```
+
+7. Edit the `docker-compose.yml` file (living at root of directory), replace the image name with {YOUR-IMAGE-NAME}.
+    
+> For example, replace `"image: risha-daz/heart-disease-predictor:55f7470"` with `"image: {YOUR-IMAGE-NAME}"`
+
+8. Running the docker image you just built at root directory
+
+```
+    docker compose up
+ ```
+## Report Bugs
+
+Report bugs at <https://github.com/sjbalagit/Heart-Disease-Predictor---Group16/issues>.
+
+**If you are reporting a bug, please follow the template guidelines.**
+
+## Fix Bugs
+
+Look through the GitHub issues for bugs. Anything labelled with `bug` and
+`help wanted` is open to whoever wants to implement it. When you decide to work on such
+an issue, please assign yourself to it and add a comment that you'll be working on that,
+too. If you see another issue without the `help wanted` label, just post a comment, the
+maintainers are usually happy for any support that they can get.
+
+## Implement Features
+
+Look through the GitHub issues for features. Anything labelled with
+`enhancement` and `help wanted` is open to whoever wants to implement it. As
+for [fixing bugs](#fix-bugs), please assign yourself to the issue and add a comment that
+you'll be working on that, too. If another enhancement catches your fancy, but it
+doesn't have the `help wanted` label, just post a comment, the maintainers are usually
+happy for any support that they can get.
+
+## Write Documentation
+
+Just [open an issue](<https://github.com/sjbalagit/Heart-Disease-Predictor---Group16/issues>) to let us know what you will be working on.
+
+## Submit Feedback
+
+The best way to send feedback is to file an issue at <https://github.com/sjbalagit/Heart-Disease-Predictor---Group16/issues>. If your feedback fits the format of one of
+the issue templates, please use that. 
+
+## Code of Conduct
 - Treat all contributors with respect and professionalism.  
 - Communicate clearly, politely and constructively.  
-- Report issues, bugs or concerns in a constructive manner.   
-
+- Report issues, bugs or concerns in a constructive manner.
 
 ## Attributions
 
