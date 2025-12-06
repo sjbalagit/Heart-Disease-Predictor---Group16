@@ -1,229 +1,94 @@
+# eda.py
+# author: Omowunmi Obadero
+# date: 2025-12-05
+
+import os, sys
+import click
 import pandas as pd
-import altair as alt
+sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
+from utils.eda_helper import (
+    load_data,
+    compute_summary_statistics,
+    plot_target_distribution,
+    plot_numerical_distributions,
+    plot_boxplots,
+    plot_categorical_vs_target,
+    plot_correlation_heatmap,  
+)
 
 
-def load_data(path):
+@click.command()
+@click.option("--data", type=str, required=True,
+              help="Path to processed training data CSV.")
+@click.option("--output-dir", type=str, required=True,
+              help="Directory where all EDA plots and summary files will be saved.")
+@click.option("--target-col", type=str, required=True,
+              help="Name of the target column.")
+@click.option("--num-cols", type=str, default="",
+              help="Comma-separated list of numerical columns.")
+@click.option("--cat-cols", type=str, default="",
+              help="Comma-separated list of categorical columns.")
+@click.option("--axis-titles", type=str, default="",
+              help="Optional comma-separated list of column:title for categorical plots, e.g. gender:Gender")
+def main(data, output_dir, target_col, num_cols, cat_cols, axis_titles):
     """
-    Load a CSV dataset.
+    Run exploratory data analysis on any dataset with numerical, categorical, and target columns.
 
     Parameters
     ----------
-    path : str
-        Path to the CSV file.
-
-    Returns
-    -------
-    pandas.DataFrame
-        Loaded dataset.
-    """
-    return pd.read_csv(path)
-
-
-def compute_summary_statistics(df):
-    """
-    Compute summary statistics for any dataset.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Input dataset.
-
-    Returns
-    -------
-    pandas.DataFrame
-        Summary statistics including numerical and categorical features.
-    """
-    return df.describe(include="all")
-
-
-def plot_target_distribution(df, target_col):
-    """
-    Generate a bar chart showing counts of each category in the target column.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Dataset containing the target column.
+    data : str
+        Path to CSV dataset.
+    output_dir : str
+        Directory where plots and summary statistics will be saved.
     target_col : str
         Name of the target column.
-
-    Returns
-    -------
-    alt.Chart
-        Bar chart with labels.
+    num_cols : str
+        Comma-separated list of numerical column names.
+    cat_cols : str
+        Comma-separated list of categorical column names.
+    axis_titles : str
+        Optional comma-separated mapping of categorical columns to axis titles.
     """
-    counts = df.groupby(target_col).size().reset_index(name="count")
+    df = load_data(data)
+    os.makedirs(output_dir, exist_ok=True)
 
-    bar = (
-        alt.Chart(counts)
-        .mark_bar(stroke="black", strokeWidth=1)
-        .encode(
-            x=alt.X(f"{target_col}:N", title=target_col),
-            y=alt.Y("count:Q", title="Count"),
-            color=alt.Color(f"{target_col}:N", title=target_col),
-            tooltip=[alt.Tooltip("count:Q", title="Count")],
-        )
-        .properties(title=f"Distribution of {target_col}", width=300, height=300)
-    )
+    # Parse numerical and categorical columns
+    num_cols = [col.strip() for col in num_cols.split(",") if col.strip()]
+    cat_cols = [col.strip() for col in cat_cols.split(",") if col.strip()]
 
-    bar_labels = bar.mark_text(dy=-5, size=14).encode(text="count:Q")
+    # Parse axis titles mapping
+    axis_titles_dict = {}
+    if axis_titles:
+        for item in axis_titles.split(","):
+            col, title = item.split(":")
+            axis_titles_dict[col.strip()] = title.strip()
 
-    return bar + bar_labels
+    # Summary statistics
+    summary = compute_summary_statistics(df)
+    summary.to_csv(os.path.join(output_dir, "summary_statistics.csv"))
 
+    # Target distribution
+    bar_chart = plot_target_distribution(df, target_col=target_col)
+    bar_chart.save(os.path.join(output_dir, f"{target_col}_distribution.png"), scale_factor=2)
 
-def plot_numerical_distributions(df, num_cols):
-    """
-    Generate histograms for numerical features.
+    # Numerical distributions
+    if num_cols:
+        num_dist = plot_numerical_distributions(df, num_cols)
+        num_dist.save(os.path.join(output_dir, "numerical_feature_distributions.png"), scale_factor=2)
 
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Dataset containing numerical features.
-    num_cols : list of str
-        List of numerical column names.
+        # Boxplots vs target
+        boxplots = plot_boxplots(df, num_cols, target_col)
+        boxplots.save(os.path.join(output_dir, "boxplots_vs_target.png"), scale_factor=2)
 
-    Returns
-    -------
-    alt.VConcatChart
-        Faceted vertical concatenation of histograms.
-    """
-    charts = []
-    for col in num_cols:
-        chart = (
-            alt.Chart(df)
-            .mark_bar()
-            .encode(
-                x=alt.X(f"{col}:Q", bin=alt.Bin(maxbins=30)),
-                y=alt.Y("count()", title="Count"),
-                tooltip=[alt.Tooltip(f"{col}:Q", title=col), alt.Tooltip("count()", title="Count")],
-            )
-            .properties(title=f"Distribution of {col}", width=300, height=250)
-        )
-        charts.append(chart)
+    # Categorical vs target
+    if cat_cols:
+        cat_plot = plot_categorical_vs_target(df, cat_cols, target_col, axis_titles=axis_titles_dict)
+        cat_plot.save(os.path.join(output_dir, "categorical_vs_target.png"), scale_factor=2)
 
-    rows = [alt.hconcat(*charts[i:i+2]) for i in range(0, len(charts), 2)]
-    return alt.vconcat(*rows).configure_legend(orient="top")
+    # Correlation heatmap
+    corr_chart = plot_correlation_heatmap(df, num_cols=num_cols, cat_cols=cat_cols, target_col=target_col)
+    corr_chart.save(os.path.join(output_dir, "correlation_heatmap.png"), scale_factor=2)
 
 
-def plot_boxplots(df, num_cols, target_col):
-    """
-    Create boxplots showing numerical features vs a target column.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Dataset containing numerical and target features.
-    num_cols : list of str
-        List of numerical column names.
-    target_col : str
-        Name of the target column.
-
-    Returns
-    -------
-    alt.VConcatChart
-        Boxplots arranged as vertical concatenation.
-    """
-    charts = []
-    for col in num_cols:
-        chart = (
-            alt.Chart(df)
-            .mark_boxplot(size=20)
-            .encode(
-                x=alt.X(f"{col}:Q", title=col),
-                y=alt.Y(f"{target_col}:N", title=target_col),
-                color=alt.Color(f"{target_col}:N", title=target_col),
-            )
-            .properties(title=f"{col} vs {target_col}", width=300, height=250)
-        )
-        charts.append(chart)
-
-    rows = [alt.hconcat(*charts[i:i+2]) for i in range(0, len(charts), 2)]
-    return alt.vconcat(*rows).configure_legend(orient="top")
-
-
-def plot_categorical_vs_target(df, cat_cols, target_col, axis_titles=None):
-    """
-    Create bar charts showing categorical features vs target column.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Dataset containing categorical features.
-    cat_cols : list of str
-        List of categorical column names.
-    target_col : str
-        Name of the target column.
-    axis_titles : dict, optional
-        Mapping of column names to axis labels.
-
-    Returns
-    -------
-    alt.VConcatChart
-        Vertical stack of bar charts.
-    """
-    charts = []
-    for col in cat_cols:
-        title = axis_titles[col] if axis_titles and col in axis_titles else col
-        chart = (
-            alt.Chart(df)
-            .mark_bar(size=30)
-            .encode(
-                x=alt.X(
-                    f"{col}:N",
-                    title=title,
-                    scale=alt.Scale(paddingInner=0.5, paddingOuter=0.5)
-                ),
-                xOffset=f"{target_col}:N",
-                y=alt.Y("count()", title="Count"),
-                color=alt.Color(f"{target_col}:N", title=target_col),
-                tooltip=[alt.Tooltip("count()", title="Count")],
-            )
-            .properties(title=f"{col} vs {target_col}", width=300, height=250)
-        )
-        charts.append(chart)
-
-    rows = [alt.hconcat(*charts[i:i+2]) for i in range(0, len(charts), 2)]
-    return alt.vconcat(*rows).configure_legend(orient="top")
-
-
-def plot_correlation_heatmap(df, num_cols, cat_cols, target_col):
-    """
-    Generate a correlation heatmap for numerical and categorical features with the target.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Dataset containing numerical, categorical, and target features.
-    num_cols : list of str
-        List of numerical feature column names.
-    cat_cols : list of str
-        List of categorical feature column names.
-    target_col : str
-        Name of the target column.
-
-    Returns
-    -------
-    alt.Chart
-        Correlation heatmap chart.
-    """
-    df_corr = df.copy()
-    if df_corr[target_col].dtype.name in ['object', 'category']:
-        df_corr[target_col] = pd.factorize(df_corr[target_col])[0]
-
-    corr_matrix = df_corr[num_cols + cat_cols + [target_col]].corr()
-    corr_long = corr_matrix.reset_index().melt(id_vars='index')
-    corr_long.columns = ['feature_x', 'feature_y', 'correlation']
-
-    base = alt.Chart(corr_long).encode(
-        x=alt.X('feature_x:N', title='Feature'),
-        y=alt.Y('feature_y:N', title='Feature')
-    )
-    heatmap = base.mark_rect().encode(
-        color=alt.Color('correlation:Q', scale=alt.Scale(scheme='redblue', domain=[-1,1])),
-        tooltip=['feature_x', 'feature_y', 'correlation']
-    )
-    text = base.mark_text(fontSize=12, color='black').encode(
-        text=alt.Text('correlation:Q', format='.2f')
-    )
-
-    return (heatmap + text).properties(title='Correlation Heatmap', width=600, height=600)
+if __name__ == "__main__":
+    main()
