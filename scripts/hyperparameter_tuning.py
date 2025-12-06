@@ -14,6 +14,7 @@ from sklearn.metrics import fbeta_score, make_scorer
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
+from sklearn.metrics import ConfusionMatrixDisplay
 from joblib import dump
 
 @click.command()
@@ -99,6 +100,8 @@ def main(X_train_path, y_train_path, X_test_path, y_test_path, preprocessor_path
     with open(os.path.join(results_to, "heart_final_model.pickle"), 'wb') as f:
         pickle.dump(final_model, f)
 
+    
+    # Save the confusion matrix plot
     cm = ConfusionMatrixDisplay.from_estimator(
     final_model,
     X_test,
