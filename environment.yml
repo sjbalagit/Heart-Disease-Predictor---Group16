@@ -5,14 +5,15 @@ dependencies:
   - python=3.11.14
   - mamba=2.1.1
   - pandas=2.3.3
-  - scikit-learn=1.7.2
-  - nb_conda_kernels=2.5.1
-  - altair-all=6.0.0
   - matplotlib=3.9.*
-  - conda-lock=3.0.4
-  - pandera=0.26.1
-  - ipython=8.28.*
   - numpy=1.26.*
+  - scikit-learn=1.7.2
+  - ipython=8.28.*
+  - pandera=0.26.1
+  - quarto=1.8.26
+  - nb_conda_kernels=2.5.1
+  - conda-lock=3.0.4
+  - altair-all=6.0.0
   - pip
   - pip:
       - deepchecks==0.19.1
