@@ -14,9 +14,9 @@ jupyter:
       format_version: '1.0'
       jupytext_version: 1.17.3
   kernelspec:
-    display_name: Python [conda env:base] *
+    display_name: Python 3
     language: python
-    name: conda-base-py
+    name: python3
 format:
   html:
     toc: true
@@ -40,7 +40,6 @@ link-citations: true
 
 import pandas as pd
 import ast
-from IPython.display import Markdown
 
 results_df = pd.read_csv("../results/evaluate_model_results.csv")
 f2_score = round(results_df['Test F2 Score'].iloc[0], 4)
@@ -97,7 +96,7 @@ This dataset has been obtained from Doppala and Bhattacharyya @Doppala2021. It w
 #| tbl-cap: Preview of the raw cardiovascular disease dataset.
 
 heart_data = pd.read_csv("../data/raw/Cardiovascular_Disease_Dataset/Cardiovascular_Disease_Dataset.csv")
-Markdown(heart_data.head().to_markdown(index=False))
+heart_data.head()
 ```
 
 ## 3.2 Analysis
@@ -157,7 +156,7 @@ We evaluated three candidate models: Logistic Regression, Support Vector Machine
 #| tbl-cap: 5-fold cross-validation scores for different models with default parameters
 
 cv_results = pd.read_csv("../results/CV_scores_default_parameters.csv")
-Markdown(cv_results.round(3).to_markdown(index=False))
+cv_results.round(3)
 ```
 
 Following the baseline evaluation, we employed scikit learn's @scikit-learn randomized search to optimize the hyperparameters for all three models. This process searched a predefined parameter grid to identify the configuration that maximized the F2 score.
@@ -177,7 +176,7 @@ After extensive preprocessing and EDA, we identified our best performing model a
 #| echo: false
 
 hyp_df = hyp_df.rename(columns={hyp_df.columns[0]: "Model"})
-Markdown(hyp_df.round(4).to_markdown(index=False))
+hyp_df.round(4)
 ```
 
 **Assumptions and Limitations**
