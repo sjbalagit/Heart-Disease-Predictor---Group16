@@ -57,14 +57,14 @@ $(EDA_OUTPUTS) : scripts/eda.py data/processed/train_heart.csv
 # 5. Run models
 # =========================================================
 results/CV_scores_default_parameters.csv : scripts/evaluate_default_models.py data/processed/train_heart.csv results/preprocessor/heart_preprocessor.pickle
-	python scripts/evaluate_default_models.py \
+    python scripts/evaluate_default_models.py \
 		--train-data data/processed/train_heart.csv \
 		--target-col target \
 		--preprocessor-path results/preprocessor/heart_preprocessor.pickle \
 		--pos-label "Heart Disease" \
 		--beta 2.0 \
 		--random-state 123 \
-		--results results/CV_scores_default_parameters.csv
+		--results results/cv_default_models/cv_scores_default_parameters.csv
 
 # =========================================================
 # 6. Hyperparameter tuning
