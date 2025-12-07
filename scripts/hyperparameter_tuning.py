@@ -30,7 +30,6 @@ def main(train_data, target_col, preprocessor_path, pos_label, beta, seed, resul
     Perform hyperparameter tuning on three classifiers: Decision Tree, Logistic Regression, and SVM.
     Also save the best classifier model and scores.
     '''
-    np.random.seed(seed)
     set_config(transform_output="pandas")
 
     # Reading the training data and loading the preprocessor
@@ -47,27 +46,27 @@ def main(train_data, target_col, preprocessor_path, pos_label, beta, seed, resul
     'decisiontreeclassifier__max_depth': np.arange(1, 11)
     }
     tree_model = make_pipeline(preprocessor, DecisionTreeClassifier(random_state=seed))
-    search_tree = RandomizedSearchCV(tree_model, tree_param_dist, return_train_score=True,
+    search_tree = RandomizedSearchCV(tree_model, tree_param_dist, return_train_score=True,random_state=seed,
                                     n_jobs=-1, scoring=make_scorer(fbeta_score, pos_label=pos_label, beta=beta))
     search_tree.fit(X_train, y_train)
 
     # Running the hyperparameter tuning for Logistic Regression
     logistic_param_dist = {
-    "logisticregression__C" : 10.0 ** np.arange(-3, 2, 1),
-    "logisticregression__max_iter" : [80, 100, 500, 1000, 1500, 2000]
+        "logisticregression__C" : 10.0 ** np.arange(-3, 2, 1),
+        "logisticregression__max_iter" : [80, 100, 500, 1000, 1500, 2000]
     }
     log_model = make_pipeline(preprocessor, LogisticRegression(random_state=seed))
-    search_log = RandomizedSearchCV(log_model, logistic_param_dist, return_train_score=True,
+    search_log = RandomizedSearchCV(log_model, logistic_param_dist, return_train_score=True,random_state=seed,
                                     n_jobs=-1, scoring=make_scorer(fbeta_score, pos_label=pos_label, beta=beta))
     search_log.fit(X_train, y_train)
 
     # Running the hyperparameter tuning for SVM
     SVM_param_dist = {
-    "svc__C": 10.0 ** np.arange(-3, 2, 1),
-    "svc__gamma": 10.0 ** np.arange(-3, 2, 1)
+        "svc__C": 10.0 ** np.arange(-3, 2, 1),
+        "svc__gamma": 10.0 ** np.arange(-3, 2, 1)
     }
     svm_model = make_pipeline(preprocessor, SVC(random_state=seed))
-    search_svm = RandomizedSearchCV(svm_model, SVM_param_dist, return_train_score=True,
+    search_svm = RandomizedSearchCV(svm_model, SVM_param_dist, return_train_score=True,random_state=seed,
                                     n_jobs=-1, scoring=make_scorer(fbeta_score, pos_label=pos_label, beta=beta))
     search_svm.fit(X_train, y_train)
 
@@ -90,8 +89,7 @@ def main(train_data, target_col, preprocessor_path, pos_label, beta, seed, resul
             continue
     
     # Build Final Models with Best Parameters
-    final_model = model_summary[best_model][0]
-    final_model.fit(X_train, y_train)
+    final_model = model_summary[best_model][0].best_estimator_
     
     os.makedirs(results_to, exist_ok=True)
     with open(os.path.join(results_to, "final_model.pickle"), 'wb') as f:
