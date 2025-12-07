@@ -17,7 +17,17 @@ The [dataset](https://github.com/sjbalagit/Heart-Disease-Predictor---Group16/tre
 
 ## Report
 
-The final report can be found in our [analysis](https://github.com/sjbalagit/Heart-Disease-Predictor---Group16/blob/main/heart_disease_analysis.ipynb).
+The final report can be found in our [here](https://sjbalagit.github.io/Heart-Disease-Predictor---Group16/analysis/heart_disease_analysis.html).
+
+## Rendering the Quarto Report
+
+If you want to regenerate the HTML report from the Quarto source file, run:
+
+```
+quarto render analysis/heart_disease_analysis.qmd --to html
+```
+This will produce an updated HTML file in the same directory.
+Ensure that Quarto is installed, see installation instructions [here](https://quarto.org/docs/get-started/)
 
 ## Usage (Attributed from Breast-Cancer-Predictor Project README)
 
@@ -80,7 +90,7 @@ python scripts/evaluate_default_models.py \
     --random-state 123 \
     --results results/CV_scores_default_parameters.csv
         
-# Step 6: Hyperparameter tunning
+# Step 6: Hyperparameter tuning
 python scripts/hyperparameter_tuning.py --train-data data/processed/train_heart.csv \
 	--target-col target \
 	--preprocessor-path results/preprocessor/heart_preprocessor.pickle \
@@ -89,7 +99,7 @@ python scripts/hyperparameter_tuning.py --train-data data/processed/train_heart.
 	--seed 123 \
 	--results-to results/final_model_results
 
-# Step 7: EValuate final model
+# Step 7: Evaluate final model
 python scripts/evaluate_scores.py \
     --test-data data/processed/test_heart.csv \
     --target-col target \
@@ -128,8 +138,6 @@ conda-lock -k explicit --file environment.yml -p linux-64
 
 6. Send a pull request to merge the changes into the main branch.
 
-## Running without Docker
-
 ### Dependencies
 
 - conda (version 23.9.0 or higher)
@@ -137,31 +145,6 @@ conda-lock -k explicit --file environment.yml -p linux-64
 - jupyterlab (version 4.0.0 or higher)
 - nb_conda_kernels (version 2.3.1 or higher)
 - Python and packages listed in environment.yml
-
-### To run locally using anaconda environmet
-If this is your first time running this project, then run the following from the root of this repository:
-
-Activate the base conda environment (needed to ensure conda-lock is available):
-```
-conda activate base
-```
-
-```
-conda-lock install --name YOURENV conda-lock.yml
-```
-
-Replace `YOURENV` with the name of the conda environment you want to create.
-
-
-To run the analysis, run the following from the root of this repository:
-
-```
-jupyter lab
-```
-
-Open `heart_disease_analysis.ipynb` in Jupyter Lab and under Switch/Select Kernel choose "Python [conda env:YOURENV]".
-
-Next, under the "Kernel" menu click "Restart Kernel and Run All Cells...".
 
 ## License
 The Heart Disease Predictor report contained in this repository is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) License](https://creativecommons.org/licenses/by-nc-sa/4.0/). Please refer to the [license file](https://github.com/sjbalagit/Heart-Disease-Predictor---Group16/blob/main/LICENSE) for full details. If you reuse or adapt any part of this report, kindly provide proper attribution and include a link to this webpage.
