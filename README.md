@@ -105,34 +105,6 @@ conda-lock -k explicit --file environment.yml -p linux-64
 
 6. Send a pull request to merge the changes into the main branch.
 
-## Running without Docker
-
-### Dependencies
-
-- conda (version 23.9.0 or higher)
-- conda-lock (version 2.5.7 or higher)
-- jupyterlab (version 4.0.0 or higher)
-- nb_conda_kernels (version 2.3.1 or higher)
-- Python and packages listed in environment.yml
-
-### To run locally using anaconda environmet
-If this is your first time running this project, then run the following from the root of this repository:
-
-```
-conda-lock install --name YOURENV conda-lock.yml
-```
-
-Replace `YOURENV` with the name of the conda environment you want to create.
-To run the analysis, run the following from the root of this repository:
-
-```
-jupyter lab
-```
-
-Open `heart_disease_analysis.ipynb` in Jupyter Lab and under Switch/Select Kernel choose "Python [conda env:YOURENV]".
-
-Next, under the "Kernel" menu click "Restart Kernel and Run All Cells...".
-
 ## References
 
 Ttimbers. (n.d.). TTIMBERS/breast-cancer-predictor. GitHub. <https://github.com/ttimbers/breast-cancer-predictor/tree/main?tab=readme-ov-file>
