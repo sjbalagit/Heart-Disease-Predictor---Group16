@@ -61,10 +61,15 @@ The dataset contains 1000 unique examples and 14 features containing information
 
 This dataset has been obtained from Doppala and Bhattacharyya @Doppala2021. It was collected at a multispecialty hospital in India. The original source provides detailed descriptions for all variables, along with summary statistics for the numerical features. The details can be found [here](https://github.com/sjbalagit/Heart-Disease-Predictor---Group16/blob/main/data/raw/Cardiovascular_Disease_Dataset/Cardiovascular_Disease_Dataset_Description.pdf).
 
+```{python}
+#| table: tbl-heart
+#| tbl-cap: Preview of the raw cardiovascular disease dataset.
+```
+
 ## 3.2 Analysis
 
 
-The analysis was performed using the Python programming language @Python and the following packages: pandas @pandas, altair @altair, and scikit-learn @scikit-learn. The dataset was split into training (80%) and testing (20%) subsets using a fixed random state (123) to ensure reproducibility. Stratified sampling was applied to maintain the proportion of heart disease cases across both sets. EDA was performed exclusively on the training data to prevent information leakage.
+The analysis was performed using the Python programming language @Python and the following packages: pandas @reback2020pandas, altair @VanderPlas2018, and scikit-learn @scikit-learn. The dataset was split into training (80%) and testing (20%) subsets using a fixed random state (123) to ensure reproducibility. EDA was performed exclusively on the training data to prevent information leakage.
 
 
 ### 3.2.1 Data Preparation
@@ -78,20 +83,20 @@ This section provides a detailed exploration of the dataset, focusing on the dis
 
 **Target Distribution:** The dataset is relatively balanced (@fig-targ-dist), with 398 cases of heart disease and 302 cases without. This slight imbalance is not substantial enough to negatively impact modeling.
 
-![Distribution of Target Variable in Input Data.](){#fig-targ-dist width=60%}
+![Distribution of Target Variable.](../results/target_distribution.png){#fig-targ-dist width=60%}
 
 **Feature Distributions:** As seen in @fig-num-hist, none of the continuous features follow a perfect normal distribution. Notably, serum cholesterol and oldpeak are right-skewed, while maximum heart rate is left-skewed.
 
-![Histograms of Numerical Features.](){#fig-num-hist width=60%}
+![Distribution of Numerical Features.](../results/numerical_feature_distributions.png){#fig-num-hist width=60%}
 
 **Numerical Features:** Patients with heart disease usually are older and generally exhibit higher resting blood pressure, serum cholesterol, and 'oldpeak' values compared to healthy individuals. On the other hand, they achieve notably lower maximum heart rates, suggesting reduced cardiac capacity under stress.
 
-![Boxplots of Numeric Features.](){#fig-num-box width=60%}
+![Boxplots of Numeric Features.](../results/boxplots_vs_target.png){#fig-num-box width=60%}
 
 **Categorical Features:** Higher heart disease prevalence is observed (@fig-cat-dist) in males and patients with exercise-induced angina, ST-T wave abnormalities, or a higher count of major vessels. Additionally, atypical and non-anginal chest pain types showed a stronger association with heart disease than typical angina in this dataset.
 
 
-![Distribution of Categorical Features.](){#fig-cat-dist width=60%}
+![Distribution of Categorical Features.](../results/categorical_vs_target.png){#fig-cat-dist width=60%}
 
 **Correlations:** The correlation heatmap (@fig-corr-map) reveals that slope, type of chest pain, and resting blood pressure have the strongest positive relationships with the target. On the other hand, age and gender showed surprisingly low linear correlation with the target in this specific dataset.
 
@@ -122,20 +127,27 @@ We evaluated three candidate models: Logistic Regression, Support Vector Machine
 Following the baseline evaluation, we employed scikit learn's @scikit-learn randomized search to optimize the hyperparameters for all three models. This process searched a predefined parameter grid to identify the configuration that maximized the F2 score.
 
 
-![Confusion matrix of model performance on test data.](){#fig-conf-mtx width=60%}
+![Confusion matrix of SVM RBF performance on test data.](../results/.png){#fig-conf-mtx width=60%}
 
 # 4. Results and Discussion
 
-**Final model selection**
+**Model Perforamce**
 
-After extensive preprocessing and EDA, we identified our best performing model among the three candidates - Decision Tree Classifier, Logistic Regression and Support Vector Machine (SVM) with Radial Basis Function (RBF) Kernel and Dummy Classifier as the baseline by using cross-validation and randomized search of hyperparameters. The SVM RBF achieved a validation score of **inline code 0.9646** - higher than the other two models. Our optimized model achieved a score of 0.98 when deployed on the test data - outperforming the validation score we achieved. 
+After extensive preprocessing and EDA, we identified our best performing model among the three candidates - Decision Tree Classifier, Logistic Regression and Support Vector Machine (SVM) with Radial Basis Function (RBF) Kernel and Dummy Classifier as the baseline by using cross-validation and randomized search of hyperparameters. SVM RBF with hyperparameters C = 1 and $ \gamma $ (Gamma) = 0.1 stands out as the best perfomer achieving a validation score of **inline code 0.9646** - higher than the other two models. The model achieved a score of 0.98 when deployed on the test data - outperforming the validation score we achieved. It successfully minimized the False Negatives with **inline code Recall = 1.0 and Precision = 0.97** as seen in the @fig-conf-mtx.
 
 There are two possible reasons which could have led to a higher test score than validation score on the unseen data. First, this could be due to the examples in the test set - the randomized split may have resulted in a test set similar to the trianing set. As a result it was easier for the model to predict better. Second, we maintained a 80-20 split on the small dataset, it is likely for the natural variance to contribute to the optimistic performace. 
 
+**Assumptions and Limitations**
+
+We are assuming the dataset used is representative of the general population. However, given that the data originates from a specific multispecialty hospital in India, there is a risk of sampling bias; the model may not generalize well to populations with different genetic backgrounds or environmental factors.
+
+
+
 # 5. Conclusion
 
-Bringing our results together, SVM RBF with hyperparameters C = 1 and $ \gamma $ (Gamma) = 0.1 stands out as the best perfomer. Given that our objective is early detection of heart disease we have prioritized minimizing False Negatives - when a patient is likely to develop heart disease but have been identified healthy. The confusion matrix @fig-conf-mtx validates this performance, showing that the model successfully minimizes the False Negatives with **inline code Recall = 1.0 and Precision = 0.97**. Overall, we conclude that SVM with RBF kernel is well-suited for deployment in early stage detection of heart disease in patients.
+Given the high stakes of medical diagnosis, our priority was to minimize False Negatives—ensuring that patients with heart disease are not incorrectly classified as healthy. Our model succeeded in this objective, achieving a perfect Recall of 1.0 on the test set. This means the model successfully flagged every positive case of heart disease in the unseen data. While there were a small number of False Positives (Precision), this is an acceptable trade-off in a screening context, as the cost of a follow-up test is far lower than the cost of a missed diagnosis.
 
+Ultimately, while the model shows promising results, it should be viewed strictly as a clinical decision-support tool. It is well-suited to screen high-risk patients for closer monitoring by physicians. However, the model performs on statistical patterns and lacks the domain expertise of a human expert. It remains susceptible to making incorrect decisions that a physician, evaluating the patient's holistic clinical history, would be equipped to identify. Future work should focus on validating this model against larger, more diverse demographic datasets to ensure global applicability.
 
 # 6. References
 
