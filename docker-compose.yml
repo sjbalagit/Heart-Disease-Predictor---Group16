@@ -1,6 +1,6 @@
 services:
   analysis-env:
-    image: rishadaz/heart-disease-predictor:775f9ff
+    image: rishadaz/heart-disease-predictor:712e04b
     ports:
       - "8888:8888"
     volumes:
