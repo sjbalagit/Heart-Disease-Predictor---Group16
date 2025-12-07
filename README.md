@@ -4,7 +4,7 @@ Authors: Shrabanti Bala Joya, Sarisha Das, Omowunmi Obadero, Mantram Sharma
 
 ## About
 
-Here we attempt to build a classification model to predict whether an individual is at risk of a heart disease. The dataset contains 1000 unique examples and 14 features containing information on the individuals cholesterol, blood pressure, fasting blood sugar, etc. Our target column contains binary encoding where 1 translates to 'heart disease' and 0 to 'no heart disease'.
+Here we attempt to build a classification model to predict whether an individual is at risk of a heart disease. The dataset contains 1000 unique examples and 14 features containing information on the individuals cholesterol, blood pressure, fasting blood sugar, etc. Our target column contains binary encoding where 1 translates to 'heart disease' and 0 to 'no heart disease'. 
 
 We performed exploratory data analysis (EDA) and applied SciKit Learn's preprocessing tools such as StandardScaler, OneHotEncoder and Ordinal encoder to preprocess the data based on the EDA. We built four different models - Decision Tree, Support Vector Machine (SVM) with Radial Basis Function (RBF) kernel, Logistic Regression and a Dummy Classifier. We used the Dummy Classifier as the baseline and compared cross-validation scores achieved from the other three models. The Support Vector Machine (Classifier) performed reasonably well than the other models with 0.98 test accuracy with recall = 1.0 and precision = 0.97.
 
@@ -39,7 +39,7 @@ docker compose up
 
 ![Host URL Sample](./images/host_url_sample.png)
 
-3. To run the analysis, open a terminal and run the preprocessing, EDA, and model evaluation scripts in order as provided.
+3. Open a terminal and execute the following commands to run the analysis:
 
 ```
 # Step 1: Preprocess data
@@ -47,14 +47,21 @@ python ./scripts/import_data.py \
     --url https://prod-dcd-datasets-cache-zipfiles.s3.eu-west-1.amazonaws.com/dzz48mvjht-1.zip \
     --write-to data/raw \
     --zip-name dataset.zip
-
-python scripts/preprocessing.py \
+    
+# Step 2: Validate data
+python scripts/validate_data.py \
     --raw-data data/raw/Cardiovascular_Disease_Dataset/Cardiovascular_Disease_Dataset.csv \
-    --data-to data/processed \
-    --preprocessor-to results/models \
-    --seed 123
+    --data-to data/validated
 
-# Step 2: Generate EDA plots
+# Step 3: Split + preprocess
+python scripts/preprocessing.py \
+    --raw-data data/validated/heart_validated.csv \
+    --data-to data/processed \
+    --preprocessor-to results/preprocessor \
+    --seed 123 \
+    --split 0.3
+
+# Step 4: Perform EDA 
 python scripts/eda.py \
     --data data/processed/train_heart.csv \
     --output-dir results/eda_results \
@@ -63,18 +70,34 @@ python scripts/eda.py \
     --cat-cols gender,chest_pain,fasting_blood_sugar,resting_electro,exercise_angina,slope,num_major_vessels \
     --axis-titles "gender:Gender,chest_pain:Chest Pain Type,fasting_blood_sugar:Fasting Blood Sugar,resting_electro:Resting ECG,exercise_angina:Exercise-Induced Angina,slope:Slope of ST Segment,num_major_vessels:Number of Major Vessels"
 
-# Step 3: Evaluate models
+# Step 5: Run models
 python scripts/evaluate_default_models.py \
-    --X_train_path data/processed/X_train.csv \
-    --y_train_path data/processed/y_train.csv \
-    --preprocessor_path results/models/preprocessor.pkl \
-    --pos_label "Heart Disease" \
+    --train-data data/processed/train_heart.csv \
+    --target-col target \
+    --preprocessor-path results/preprocessor/heart_preprocessor.pickle \
+    --pos-label "Heart Disease" \
     --beta 2.0 \
-    --random_state 123 \
+    --random-state 123 \
     --results results/CV_scores_default_parameters.csv
+        
+# Step 6: Hyperparameter tunning
+python scripts/hyperparameter_tuning.py --train-data data/processed/train_heart.csv \
+	--target-col target \
+	--preprocessor-path results/preprocessor/heart_preprocessor.pickle \
+	--pos-label "Heart Disease" \
+	--beta 2.0 \
+	--seed 123 \
+	--results-to results/final_model_results
+
+# Step 7: EValuate final model
+python scripts/evaluate_scores.py \
+    --test-data data/processed/test_heart.csv \
+    --target-col target \
+    --final-model-path results/final_model_results/final_model.pickle \
+    --pos-label "Heart Disease" \
+    --beta 2.0 \
+    --results-to results/final_model_results    
 ```
-
-
 
 ### Clean up
 
@@ -118,11 +141,18 @@ conda-lock -k explicit --file environment.yml -p linux-64
 ### To run locally using anaconda environmet
 If this is your first time running this project, then run the following from the root of this repository:
 
+Activate the base conda environment (needed to ensure conda-lock is available):
+```
+conda activate base
+```
+
 ```
 conda-lock install --name YOURENV conda-lock.yml
 ```
 
 Replace `YOURENV` with the name of the conda environment you want to create.
+
+
 To run the analysis, run the following from the root of this repository:
 
 ```
@@ -132,6 +162,11 @@ jupyter lab
 Open `heart_disease_analysis.ipynb` in Jupyter Lab and under Switch/Select Kernel choose "Python [conda env:YOURENV]".
 
 Next, under the "Kernel" menu click "Restart Kernel and Run All Cells...".
+
+## License
+The Heart Disease Predictor report contained in this repository is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) License](https://creativecommons.org/licenses/by-nc-sa/4.0/). Please refer to the [license file](https://github.com/sjbalagit/Heart-Disease-Predictor---Group16/blob/main/LICENSE) for full details. If you reuse or adapt any part of this report, kindly provide proper attribution and include a link to this webpage.
+
+The software code included in this repository is licensed under the MIT License. See the [license file](https://github.com/sjbalagit/Heart-Disease-Predictor---Group16/blob/main/LICENSE) for further information.
 
 ## References
 
