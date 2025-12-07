@@ -97,6 +97,9 @@ python scripts/evaluate_scores.py \
     --pos-label "Heart Disease" \
     --beta 2.0 \
     --results-to results/final_model_results   
+
+quarto render analysis/heart_disease_analysis.qmd --to html
+quarto render analysis/heart_disease_analysis.qmd --to pdf
 ```
 
 ### Clean up
@@ -128,11 +131,6 @@ conda-lock -k explicit --file environment.yml -p linux-64
 
 6. Send a pull request to merge the changes into the main branch.
 
-7. If you want to regenerate the HTML report from the Quarto source file, run:
-
-```
-quarto render analysis/heart_disease_analysis.qmd --to html
-```
 
 ## License
 The Heart Disease Predictor report contained in this repository is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) License](https://creativecommons.org/licenses/by-nc-sa/4.0/). Please refer to the [license file](https://github.com/sjbalagit/Heart-Disease-Predictor---Group16/blob/main/LICENSE) for full details. If you reuse or adapt any part of this report, kindly provide proper attribution and include a link to this webpage.
