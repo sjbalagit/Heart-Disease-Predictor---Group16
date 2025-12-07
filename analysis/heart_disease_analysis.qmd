@@ -33,13 +33,44 @@ execute:
 bibliography: references.bib
 link-citations: true
 ---
+```{python}
+#| echo: false
+#| message: false
+#| warning: false
 
+import pandas as pd
+import ast
+from IPython.display import Markdown
+
+results_df = pd.read_csv("../results/evaluate_model_results.csv")
+f2_score = round(results_df['Test F2 Score'].iloc[0], 4)
+
+cm_df = pd.read_csv("../results/final_model_results/confusion_matrix.csv", index_col=0)
+tn = cm_df.iloc[1,1]
+fp = cm_df.iloc[0,1]
+fn = cm_df.iloc[1,0]
+tp = cm_df.iloc[0,0]
+total = tn + fp + fn + tp
+test_accuracy = round((tp + tn) / total, 2)
+recall_score = round(tp / (tp + fn), 2)
+precision_score = round(tp / (tp + fp), 2)
+
+hyp_df = pd.read_csv("../results/final_model_results/hyperparameter_model_results.csv")
+svm_row = hyp_df[hyp_df.iloc[:, 0] == 'RBF SVM'].iloc[0]
+best_val_score = round(svm_row['F2 Score'], 4)
+params = ast.literal_eval(svm_row['Best Model Parameters'])
+best_c = params.get('svc__C')
+best_gamma = params.get('svc__gamma')
+
+test_res_df = pd.read_csv("../results/final_model_results/evaluate_model_results.csv")
+test_f2 = round(test_res_df['Test F2 Score'].iloc[0], 4)
+```
 
 # 1. Summary
 
 We wish to create a simple machine learning classification model which can help us predict high risk individuals for heart disease. We try three methods: Decision Tree Classifier, Logistic Regression and Support Vector Machine with Radial Basis Function (RBF) Kernel to use 14 common features related to heart disease to make the predictions. Here we aimed to find the best model that predicts whether an individual is at risk of developing heart disease based on their clinical features, enabling early identification and prevention measures. 
 
-We have selected F2 score as our primary performance metric since our primary goal is to minimize False Negatives - cases where patients at risk of heart disease are incorrectly identified as healthy. The final classifier SVM RBF performed reasonably well on the unseen test dataset, achieving an F2 score (β = 2) of **replace with inline code 0.9646** and an overall accuracy of **replace with inline code 0.98**. Out of the 200 test data cases, it correctly predicted 196 and misclassified 4, which are all False Positives - predicting that a patient is at risk of developing heart disease when they are in fact healthy. False positives are not as dangerous as False Negatives. Although they could theoretically cause the patient to undergo unnecessary treatment if the model is used as a decision tool, we expect there to be additional decision layers which can mitigate this. As such, we believe this model serves as a valuable decision-support tool, assisting medical professionals in identifying high-risk individuals for closer monitoring and timely intervention.
+We have selected F2 score as our primary performance metric since our primary goal is to minimize False Negatives - cases where patients at risk of heart disease are incorrectly identified as healthy. The final classifier SVM RBF performed reasonably well on the unseen test dataset, achieving an F2 score (β = 2) of `{python} f2_score`. Out of the `{python} total` test data cases, it correctly predicted `{python} tn+tp` and misclassified `{python} fn+fp`, out of which there are `{python} fn` False Negatives - predicting that a patient is at risk of developing heart disease when they are in fact healthy and `{python} fp` False Positives. Although False Positives could cause the patient to undergo unnecessary treatment if the model is used as a decision tool, we expect there to be additional decision layers which can mitigate this. As such, we believe this model serves as a valuable decision-support tool, assisting medical professionals in identifying high-risk individuals for closer monitoring and timely intervention.
 
 # 2. Introduction
 
@@ -57,24 +88,27 @@ Thus, even minor improvements or supplementary methods in early detection could 
 
 ## 3.1 Data
 
-The dataset contains 1000 unique examples and 14 features containing information on the individuals cholesterol, blood pressure and fasting blood sugar. We are using 13 features and dropping the patient ID feature for our analysis. The target variable indicates whether a patient has 'heart disease' or 'no heart disease'. The dataset has **no missing values**.
+The dataset contains 1000 unique examples and 14 features containing information on the individuals cholesterol, blood pressure and fasting blood sugar. We are using 13 features and dropping the patient ID feature for our analysis. The target variable indicates whether a patient has 'Heart Disease' by 1 or 'No Heart Disease' by 0. The dataset has no missing values as they have been imputed in the source set.
 
 This dataset has been obtained from Doppala and Bhattacharyya @Doppala2021. It was collected at a multispecialty hospital in India. The original source provides detailed descriptions for all variables, along with summary statistics for the numerical features. The details can be found [here](https://github.com/sjbalagit/Heart-Disease-Predictor---Group16/blob/main/data/raw/Cardiovascular_Disease_Dataset/Cardiovascular_Disease_Dataset_Description.pdf).
 
 ```{python}
 #| table: tbl-heart
 #| tbl-cap: Preview of the raw cardiovascular disease dataset.
+
+heart_data = pd.read_csv("../data/raw/Cardiovascular_Disease_Dataset/Cardiovascular_Disease_Dataset.csv")
+Markdown(heart_data.head().to_markdown(index=False))
 ```
 
 ## 3.2 Analysis
 
 
-The analysis was performed using the Python programming language @Python and the following packages: pandas @reback2020pandas, altair @VanderPlas2018, and scikit-learn @scikit-learn. The dataset was split into training (80%) and testing (20%) subsets using a fixed random state (123) to ensure reproducibility. EDA was performed exclusively on the training data to prevent information leakage.
+The analysis was performed using the Python programming language @Python and the following packages: pandas @reback2020pandas, altair @VanderPlas2018, and scikit-learn @scikit-learn. The dataset was split into training (70%) and testing (30%) subsets using a fixed random state (123) to ensure reproducibility. EDA was performed exclusively on the training data to prevent information leakage.
 
 
 ### 3.2.1 Data Preparation
 
-To ensure data integrity, the dataset was successfully read and validated against a predefined pandera @niels_bantilan-proc-scipy-2020 schema, confirming that the file format, column names, and data types were consistent with analysis requirements. The validation process verified the absence of duplicate records or empty observations. Specific columns like slope and serum_cholesterol triggered warnings for zero-values and potential outliers. These anomalous values were addressed through imputation in the source dataset. We scaled the features to effectively capture the outliers rather than removing them to preserve data volume. Finally, we renamed the target labels to "Heart Disease" and "No Heart Disease" from binary encoding of 1 and 0 and inspected feature distributions and correlations. The results confirmed that no anomalous relationships exist that would impact modeling.
+To ensure data integrity, the dataset was successfully read and validated against a predefined pandera @niels_bantilan-proc-scipy-2020 schema, confirming that the file format, column names, and data types were consistent with analysis requirements. The validation process verified the absence of duplicate records or empty observations. Specific columns like slope and serum cholesterol triggered warnings for zero-values and potential outliers. Since these values are biologically implausible, they were interpreted as missing data that had been imputed with zeros. TAdditionally, extreme serum cholesterol values were flagged as outliers; however, we retained these as they represent high-risk clinical cases rather than data errors. The numerical features were scaled to effectively capture the outliers rather than removing them to preserve data volume and capture extreme cases. Finally, we renamed the target labels to "Heart Disease" and "No Heart Disease" from binary encoding of 1 and 0 and inspected feature distributions and correlations. The results confirmed that no anomalous relationships exist that would impact modeling.
 
 
 ### 3.2.2 Exploratory Data Analysis
@@ -83,24 +117,24 @@ This section provides a detailed exploration of the dataset, focusing on the dis
 
 **Target Distribution:** The dataset is relatively balanced (@fig-targ-dist), with 398 cases of heart disease and 302 cases without. This slight imbalance is not substantial enough to negatively impact modeling.
 
-![Distribution of Target Variable.](../results/target_distribution.png){#fig-targ-dist width=60%}
+![Class balance of the heart disease target variable (Presence vs. Absence).](../results/eda_results/target_distribution.png){#fig-targ-dist width=60%}
 
 **Feature Distributions:** As seen in @fig-num-hist, none of the continuous features follow a perfect normal distribution. Notably, serum cholesterol and oldpeak are right-skewed, while maximum heart rate is left-skewed.
 
-![Distribution of Numerical Features.](../results/numerical_feature_distributions.png){#fig-num-hist width=60%}
+![Histograms displaying the distribution of continuous features.](../results/eda_results/numerical_feature_distributions.png){#fig-num-hist width=60%}
 
 **Numerical Features:** Patients with heart disease usually are older and generally exhibit higher resting blood pressure, serum cholesterol, and 'oldpeak' values compared to healthy individuals. On the other hand, they achieve notably lower maximum heart rates, suggesting reduced cardiac capacity under stress.
 
-![Boxplots of Numeric Features.](../results/boxplots_vs_target.png){#fig-num-box width=60%}
+![Distribution of numeric features stratified by heart disease diagnosis.](../results/eda_results/boxplots_vs_target.png){#fig-num-box width=60%}
 
 **Categorical Features:** Higher heart disease prevalence is observed (@fig-cat-dist) in males and patients with exercise-induced angina, ST-T wave abnormalities, or a higher count of major vessels. Additionally, atypical and non-anginal chest pain types showed a stronger association with heart disease than typical angina in this dataset.
 
 
-![Distribution of Categorical Features.](../results/categorical_vs_target.png){#fig-cat-dist width=60%}
+![Prevalence of heart disease across gender, chest pain type, and other categorical variables.](../results/eda_results/categorical_vs_target.png){#fig-cat-dist width=60%}
 
 **Correlations:** The correlation heatmap (@fig-corr-map) reveals that slope, type of chest pain, and resting blood pressure have the strongest positive relationships with the target. On the other hand, age and gender showed surprisingly low linear correlation with the target in this specific dataset.
 
-![Correlation Heatmap for All Features.](../results/correlation_heatmap.png){#fig-corr-map width=70%}
+![Heatmap displaying Pearson correlation between predictors and target in heart disease dataset.](../results/eda_results/correlation_heatmap.png){#fig-corr-map width=60%}
 
 
 ## 3.3 Scoring Metric**
@@ -120,32 +154,42 @@ We evaluated three candidate models: Logistic Regression, Support Vector Machine
 
 ```{python}
 #| label: tbl-cv-default
-#| tbl-cap: 5-fold CV scores for different models with default parameters
+#| tbl-cap: 5-fold cross-validation scores for different models with default parameters
 
+cv_results = pd.read_csv("../results/CV_scores_default_parameters.csv")
+Markdown(cv_results.round(3).to_markdown(index=False))
 ```
 
 Following the baseline evaluation, we employed scikit learn's @scikit-learn randomized search to optimize the hyperparameters for all three models. This process searched a predefined parameter grid to identify the configuration that maximized the F2 score.
 
 
-![Confusion matrix of SVM RBF performance on test data.](../results/.png){#fig-conf-mtx width=60%}
+![Confusion matrix of SVM RBF performance on test data.](../results/final_model_results/confusion_matrix.png){#fig-conf-mtx width=60%}
 
 # 4. Results and Discussion
 
 **Model Perforamce**
 
-After extensive preprocessing and EDA, we identified our best performing model among the three candidates - Decision Tree Classifier, Logistic Regression and Support Vector Machine (SVM) with Radial Basis Function (RBF) Kernel and Dummy Classifier as the baseline by using cross-validation and randomized search of hyperparameters. SVM RBF with hyperparameters C = 1 and $ \gamma $ (Gamma) = 0.1 stands out as the best perfomer achieving a validation score of **inline code 0.9646** - higher than the other two models. The model achieved a score of 0.98 when deployed on the test data - outperforming the validation score we achieved. It successfully minimized the False Negatives with **inline code Recall = 1.0 and Precision = 0.97** as seen in the @fig-conf-mtx.
+After extensive preprocessing and EDA, we identified our best performing model among the three candidates - Decision Tree Classifier, Logistic Regression and Support Vector Machine (SVM) with Radial Basis Function (RBF) Kernel and Dummy Classifier as the baseline by using cross-validation and randomized search of hyperparameters. SVM RBF with hyperparameters $C =$ `{python} best_c` and $ \gamma $ (Gamma) = `{python} best_gamma` stands out as the best perfomer achieving a validation score of `{python} best_val_score` - higher than the other two models. The model achieved F2 score of `{python} test_f2` and accuracy of `{python} test_accuracy` when deployed on the test data. It successfully minimized the False Negatives with Recall = `{python} recall_score` and Precision = `{python} precision_score` as seen in the @fig-conf-mtx.
 
-There are two possible reasons which could have led to a higher test score than validation score on the unseen data. First, this could be due to the examples in the test set - the randomized split may have resulted in a test set similar to the trianing set. As a result it was easier for the model to predict better. Second, we maintained a 80-20 split on the small dataset, it is likely for the natural variance to contribute to the optimistic performace. 
+```{python}
+#| label: tbl-hyperparams
+#| tbl-cap: Optimization results: Best F2 scores and hyperparameters for each candidate model.
+#| echo: false
+
+hyp_df = hyp_df.rename(columns={hyp_df.columns[0]: "Model"})
+Markdown(hyp_df.round(4).to_markdown(index=False))
+```
 
 **Assumptions and Limitations**
 
-We are assuming the dataset used is representative of the general population. However, given that the data originates from a specific multispecialty hospital in India, there is a risk of sampling bias; the model may not generalize well to populations with different genetic backgrounds or environmental factors.
+We are assuming the dataset used is representative of the general population. However, given that the data originates from a specific multispecialty hospital in India, there is a risk of sampling bias. The model may not generalize well to populations with different genetic backgrounds or environmental factors.
 
+The primary limitation of this study is the data size. Although the test score aligns closely with the validation score, indicating good generalization within this specific dataset, the relatively small number of observations limits our ability to ensure the model would perform equally well on a diverse population. Another limitation is that the SVM RBF model is not as interpretable as other models such as Decision Trees. In the given context of medical diagnosis, a models explainability may be prefered to trust its decisions by professionals.
 
 
 # 5. Conclusion
 
-Given the high stakes of medical diagnosis, our priority was to minimize False Negatives—ensuring that patients with heart disease are not incorrectly classified as healthy. Our model succeeded in this objective, achieving a perfect Recall of 1.0 on the test set. This means the model successfully flagged every positive case of heart disease in the unseen data. While there were a small number of False Positives (Precision), this is an acceptable trade-off in a screening context, as the cost of a follow-up test is far lower than the cost of a missed diagnosis.
+Given the high stakes of medical diagnosis, our priority was to minimize False Negatives - ensuring that patients at risk of heart disease are not incorrectly classified as healthy. Our model succeeded in this objective, achieving a high Recall on the test set. This means the model successfully flagged every positive case of heart disease in the unseen data. While there were a small number of False Positives, this is an acceptable trade-off in a screening context, as the cost of a follow-up test is far lower than the cost of a missed diagnosis.
 
 Ultimately, while the model shows promising results, it should be viewed strictly as a clinical decision-support tool. It is well-suited to screen high-risk patients for closer monitoring by physicians. However, the model performs on statistical patterns and lacks the domain expertise of a human expert. It remains susceptible to making incorrect decisions that a physician, evaluating the patient's holistic clinical history, would be equipped to identify. Future work should focus on validating this model against larger, more diverse demographic datasets to ensure global applicability.
 
