@@ -26,7 +26,6 @@ def main(raw_data, data_to, preprocessor_to, seed, split):
     '''This script splits the raw data into train and test sets, 
     and then preprocesses the data to be used in exploratory data analysis.
     It also saves the preprocessor to be used in the model training script.'''
-    np.random.seed(seed)
     set_config(transform_output="pandas")
 
     heart = pd.read_csv(raw_data)
@@ -78,14 +77,16 @@ def main(raw_data, data_to, preprocessor_to, seed, split):
             ('passthrough', binary),
             ('drop', drop)
         )
-    
+
+    heart_preprocessor.fit(train_heart)
+
     # Save preprocessor
     with open(
         os.path.join(preprocessor_to, "heart_preprocessor.pickle"), "wb"
     ) as f:
         pickle.dump(heart_preprocessor, f)
 
-    heart_train_preprocessed = heart_preprocessor.fit_transform(train_heart)
+    heart_train_preprocessed = heart_preprocessor.transform(train_heart)
     heart_test_preprocessed = heart_preprocessor.transform(test_heart)
 
     # Add train target back
