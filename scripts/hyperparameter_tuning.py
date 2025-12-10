@@ -13,6 +13,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils.optimal_hyperparameters import tune_hyperparameters
 from utils.models import get_models
+from utils.optimal_hyperparameters import get_best_model
 
 @click.command()
 @click.option('--train-data', required=True, help='Path to train data CSV')
@@ -43,44 +44,29 @@ def main(train_data, target_col, preprocessor_path, pos_label, beta, seed, resul
     tree_param_dist = {
     'decisiontreeclassifier__max_depth': np.arange(1, 11)
     }
-    search_tree = tune_hyperparameters(get_models(random_state=seed)["decision tree"], preprocessor, tree_param_dist, pos_label, beta, seed)
-    search_tree.fit(X_train, y_train)
+    search_tree = tune_hyperparameters(X_train, y_train, get_models(random_state=seed)["decision tree"], preprocessor, tree_param_dist, pos_label, beta, seed)
 
     # Running the hyperparameter tuning for Logistic Regression
     logistic_param_dist = {
         "logisticregression__C" : 10.0 ** np.arange(-3, 2, 1),
         "logisticregression__max_iter" : [80, 100, 500, 1000, 1500, 2000]
     }
-    search_log = tune_hyperparameters(get_models(random_state=seed)["Logistic Regression"], preprocessor, logistic_param_dist, pos_label, beta, seed)
-    search_log.fit(X_train, y_train)
+    search_log = tune_hyperparameters(X_train, y_train, get_models(random_state=seed)["Logistic Regression"], preprocessor, logistic_param_dist, pos_label, beta, seed)
 
     # Running the hyperparameter tuning for SVM
     SVM_param_dist = {
         "svc__C": 10.0 ** np.arange(-3, 2, 1),
         "svc__gamma": 10.0 ** np.arange(-3, 2, 1)
     }
-    search_svm = tune_hyperparameters(get_models(random_state=seed)["RBF SVM"], preprocessor, SVM_param_dist, pos_label, beta, seed)
-    search_svm.fit(X_train, y_train)
+    search_svm = tune_hyperparameters(X_train, y_train, get_models(random_state=seed)["RBF SVM"], preprocessor, SVM_param_dist, pos_label, beta, seed)
 
-    # Finding the best model from the best scores
-    results_dict = dict()
-    best_score = 0
-    best_model = None
+    # Finding the best model from the best scores and creating final_model
     model_summary = {
         'Decision Tree': [search_tree, search_tree.best_score_, search_tree.best_params_],
         'Logistic Regression': [search_log, search_log.best_score_, search_log.best_params_],
         'RBF SVM': [search_svm, search_svm.best_score_, search_svm.best_params_]
     }
-    for model_name, summary in model_summary.items():
-        results_dict[model_name] = [summary[1], summary[2]]
-        print(f"The best F2 score for {model_name} is {summary[1]} with parameters {summary[2]}")
-        best_score = max(best_score, summary[1])
-        if best_score == summary[1]:
-            best_model = model_name
-        else:
-            continue
-    # Build Final Models with Best Parameters
-    final_model = model_summary[best_model][0].best_estimator_
+    final_model, results_dict = get_best_model(model_summary)
     
     os.makedirs(results_to, exist_ok=True)
     with open(os.path.join(results_to, "final_model.pickle"), 'wb') as f:
