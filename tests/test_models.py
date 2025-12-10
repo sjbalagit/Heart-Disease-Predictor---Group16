@@ -1,3 +1,4 @@
+import pytest
 from sklearn.dummy import DummyClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
@@ -23,3 +24,49 @@ def test_get_models():
 
     assert models["Decision Tree"].random_state == 42
     assert models["Logistic Regression"].random_state == 42
+
+
+def test_get_models_different_random_state():
+    """
+    Test get_models with a different random_state value.
+    """
+    models = get_models(random_state=999)
+
+    assert models["Decision Tree"].random_state == 999
+    assert models["Logistic Regression"].random_state == 999
+
+
+def test_get_models_no_random_state():
+    """
+    Test get_models with random_state=None.
+    """
+    models = get_models(random_state=None)
+
+    assert models["Decision Tree"].random_state is None
+    assert models["Logistic Regression"].random_state is None
+
+
+def test_get_models_default_random_state():
+    """
+    Test get_models with default random_state value.
+    """
+    models = get_models()
+
+    assert models["Decision Tree"].random_state == 123
+    assert models["Logistic Regression"].random_state == 123
+
+
+def test_get_models_return_type():
+    """
+    Test that get_models returns a dictionary.
+    """
+    models = get_models(random_state=0)
+    assert isinstance(models, dict)
+
+
+def test_get_models_invalid_random_state_type():
+    """
+    Test get_models with an invalid random_state type.
+    """
+    with pytest.raises(Exception):
+        get_models(random_state={"not": "valid"})
