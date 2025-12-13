@@ -12,7 +12,7 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils.optimal_hyperparameters import tune_hyperparameters
-from utils.models import get_models
+from utils.models import get_models, get_param_dist
 from utils.optimal_hyperparameters import get_best_model
 
 @click.command()
@@ -43,15 +43,26 @@ def main(train_data, target_col, preprocessor_path, pos_label, beta, seed, resul
     # Running the hyperparameter tuning for all models
     model_summary = dict()
     for model_name, model_info in get_models(random_state=seed).items():
-        if model_name == "dummy clf":
+        if model_name == "Dummy Classifier":
             continue
-        model_summary[model_name] = [tune_hyperparameters(X_train, y_train, model_info[0], preprocessor, model_info[1], pos_label, beta, seed), 
-                                     tune_hyperparameters(X_train, y_train, model_info[0], preprocessor, model_info[1], pos_label, beta, seed).best_score_,
-                                     tune_hyperparameters(X_train, y_train, model_info[0], preprocessor, model_info[1], pos_label, beta, seed).best_params_
+        model_summary[model_name] = [tune_hyperparameters(X_train, y_train, model_info, preprocessor, get_param_dist()[model_name], pos_label, beta, seed), 
+                                     tune_hyperparameters(X_train, y_train, model_info, preprocessor, get_param_dist()[model_name], pos_label, beta, seed).best_score_,
+                                     tune_hyperparameters(X_train, y_train, model_info, preprocessor, get_param_dist()[model_name], pos_label, beta, seed).best_params_
                                     ]
 
     # Finding the best model from the best scores and creating final_model
-    final_model, results_dict = get_best_model(model_summary)
+    results_dict = dict()
+    best_score = 0
+    best_model = None
+    for model_name, summary in model_summary.items():
+        results_dict[model_name] = [summary[1], summary[2]]
+        print(f"The best F2 score for {model_name} is {summary[1]} with parameters {summary[2]}")
+        best_score = max(best_score, summary[1])
+        if best_score == summary[1]:
+            best_model = model_name
+        else:
+            continue
+    final_model = model_summary[best_model][0].best_estimator_
     
     os.makedirs(results_to, exist_ok=True)
     with open(os.path.join(results_to, "final_model.pickle"), 'wb') as f:
