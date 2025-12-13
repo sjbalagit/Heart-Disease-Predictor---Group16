@@ -22,6 +22,7 @@ conda-lock (>= 2.5.7)
 - Open a PR only after your changes are complete, tested, and documented where necessary.
 - Keep your PR focused on a single update or fix, and include a clear description of what you changed.
 - Ensure all checks and tests pass before requesting a review.
+- New code should follow the PEP8 [style guide](https://peps.python.org/pep-0008/)
 
 
 ### Instructions for Installing Conda and Conda-Lock
