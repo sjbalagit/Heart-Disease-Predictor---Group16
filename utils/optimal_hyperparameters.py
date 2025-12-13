@@ -10,7 +10,9 @@ def tune_hyperparameters(X_train, y_train, model, preprocessor, param_dist, pos_
     -------
     RandomizedSearchCV object that is fit on (X_train, y_train)
     """
-    if pos_label < 0 or param_dist == {} or beta < 0:
+    if param_dist == {} or beta < 0:
+        raise ValueError
+    if pos_label not in y_train.values:
         raise ValueError
     model = make_pipeline(preprocessor, model)
     search_model = RandomizedSearchCV(model, param_dist, return_train_score=True, random_state=seed,

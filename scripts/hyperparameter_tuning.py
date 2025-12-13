@@ -13,7 +13,6 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils.optimal_hyperparameters import tune_hyperparameters
 from utils.models import get_models, get_param_dist
-from utils.optimal_hyperparameters import get_best_model
 
 @click.command()
 @click.option('--train-data', required=True, help='Path to train data CSV')
