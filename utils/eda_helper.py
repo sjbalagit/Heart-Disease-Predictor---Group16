@@ -58,18 +58,43 @@ def plot_target_distribution(df, target_col):
         alt.Chart(counts)
         .mark_bar(stroke="black", strokeWidth=1)
         .encode(
-            x=alt.X(f"{target_col}:N", title=target_col),
-            y=alt.Y("count:Q", title="Count"),
-            color=alt.Color(f"{target_col}:N", title=target_col),
-            tooltip=[alt.Tooltip("count:Q", title="Count")],
+            x=alt.X(
+                "count:Q",
+                title="Count",
+                axis=alt.Axis(labelFontSize=16, titleFontSize=18)
+            ),
+            y=alt.Y(
+                f"{target_col}:N",
+                title=target_col.title(),
+                axis=alt.Axis(labelFontSize=16, titleFontSize=18)
+            ),
+            color=alt.Color(
+                f"{target_col}:N",
+                title=target_col.title(),
+                legend=alt.Legend(labelFontSize=16, titleFontSize=18)
+            ),
+            tooltip=[alt.Tooltip("count:Q", title="Count")]
         )
-        .properties(title=f"Distribution of {target_col}", width=300, height=300)
+        .properties(
+            title=alt.TitleParams(
+                text=f"DISTRIBUTION OF {target_col.upper()}",
+                fontSize=20  # chart title font size
+            ),
+            width=500,
+            height=400
+        )
     )
 
-    bar_labels = bar.mark_text(dy=-5, size=14).encode(text="count:Q")
+    bar_labels = bar.mark_text(
+        dx=20,  
+        dy=-20,  
+        fontSize=18
+    ).encode(
+        text="count:Q"
+    )
 
     return bar + bar_labels
-
+    
 
 def plot_numerical_distributions(df, num_cols):
     """
