@@ -1,5 +1,7 @@
 ## Contributing
 
+Shrabanti Bala Joya, Sarisha Das, Omowunmi Obadero, Mantram Sharma
+
 We welcome and appreciate all contributions. We make sure all contributions are cited and credited properly.
 
 ### Example Contributions
@@ -51,7 +53,10 @@ conda install -c conda-forge conda-lock
 
 ### Instructions for Adding New Dependencies  
 
-Open in your terminal, navigate to the root directory.
+Open in your terminal, navigate to the root directory. To ensure the base is active run:
+```
+conda activate base
+```
 
 Create a conda environment called "YOURENV" using the "conda-lock.yml" by running in your terminal:
 

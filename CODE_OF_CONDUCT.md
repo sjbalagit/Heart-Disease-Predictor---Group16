@@ -1,6 +1,8 @@
 
 # Contributor Covenant Code of Conduct
 
+Shrabanti Bala Joya, Sarisha Das, Omowunmi Obadero, Mantram Sharma
+
 ## Our Pledge
 
 We pledge to make our community welcoming, safe, and equitable for all.

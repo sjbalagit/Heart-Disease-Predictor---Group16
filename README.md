@@ -40,6 +40,7 @@ docker compose up
 ![Host URL Sample](./images/host_url_sample.png)
 
 3. Open a terminal and execute the following commands from the `root` to run the analysis:
+
 3a. Reset the project to a clean state (remove all generated files from the analysis)
 ```
 make clean

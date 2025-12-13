@@ -124,7 +124,7 @@ $(EVAL_OUTPUTS): scripts/evaluate_scores.py data/processed/test_heart.csv result
 # =========================================================
 # 8. Generate quarto html
 # =========================================================
-analysis/heart_disease_analysis.html : $(EDA_OUTPUTS) results/cv_default_models/cv_scores_default_parameters.csv $(EVAL_OUTPUTS)
+analysis/heart_disease_analysis.html : $(EDA_OUTPUTS) results/cv_default_models/cv_scores_default_parameters.csv $(EVAL_OUTPUTS) analysis/heart_disease_analysis.qmd analysis/references.bib
 	quarto render analysis/heart_disease_analysis.qmd --to html
 
 # =========================================================
