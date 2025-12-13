@@ -4,3 +4,10 @@ playground/
 scripts/.ipynb_checkpoints/
 __pycache__/
 data/
+.npm/
+.jupyter/
+.ipython/
+.local/
+.cache/
+.config/
+.bash_history
