@@ -39,66 +39,14 @@ docker compose up
 
 ![Host URL Sample](./images/host_url_sample.png)
 
-3. Open a terminal and execute the following commands to run the analysis:
-
+3. Open a terminal and execute the following commands from the `root` to run the analysis:
+3a. Reset the project to a clean state (remove all generated files from the analysis)
 ```
-# Step 1: Download and extract data
-python scripts/import_data.py \
-    --url https://prod-dcd-datasets-cache-zipfiles.s3.eu-west-1.amazonaws.com/dzz48mvjht-1.zip \
-    --write-to data/raw \
-    --zip-name dataset.zip
-    
-# Step 2: Validate data
-python scripts/validate_data.py \
-    --raw-data data/raw/Cardiovascular_Disease_Dataset/Cardiovascular_Disease_Dataset.csv \
-    --data-to data/validated
-
-# Step 3: Split + preprocess
-python scripts/preprocessing.py \
-    --raw-data data/validated/heart_validated.csv \
-    --data-to data/processed \
-    --preprocessor-to results/preprocessor \
-    --seed 123 \
-    --split 0.3
-
-# Step 4: Perform EDA 
-python scripts/eda.py \
-    --data data/processed/train_heart.csv \
-    --output-dir results/eda_results \
-    --target-col target \
-    --num-cols age,resting_bp,serum_cholesterol,max_heart_rate,old_peak \
-    --cat-cols gender,chest_pain,fasting_blood_sugar,resting_electro,exercise_angina,slope,num_major_vessels \
-    --axis-titles "gender:Gender,chest_pain:Chest Pain Type,fasting_blood_sugar:Fasting Blood Sugar,resting_electro:Resting ECG,exercise_angina:Exercise-Induced Angina,slope:Slope of ST Segment,num_major_vessels:Number of Major Vessels"
-
-# Step 5: Run models
-python scripts/evaluate_default_models.py \
-    --train-data data/processed/train_heart.csv \
-    --target-col target \
-    --preprocessor-path results/preprocessor/heart_preprocessor.pickle \
-    --pos-label "Heart Disease" \
-    --beta 2.0 \
-    --random-state 123 \
-    --results results/cv_default_models/cv_scores_default_parameters.csv
-        
-# Step 6: Hyperparameter tuning
-python scripts/hyperparameter_tuning.py --train-data data/processed/train_heart.csv \
-	--target-col target \
-	--preprocessor-path results/preprocessor/heart_preprocessor.pickle \
-	--pos-label "Heart Disease" \
-	--beta 2.0 \
-	--seed 123 \
-	--results-to results/final_model_results
-
-# Step 7: Evaluate final model
-python scripts/evaluate_scores.py \
-    --test-data data/processed/test_heart.csv \
-    --target-col target \
-    --final-model-path results/final_model_results/final_model.pickle \
-    --pos-label "Heart Disease" \
-    --beta 2.0 \
-    --results-to results/final_model_results   
-
-quarto render analysis/heart_disease_analysis.qmd --to html
+make clean
+```
+3b. Run the analysis in its entirity, including generation of new HTML report, run the following:
+```
+make all 
 ```
 
 ### Clean up
@@ -114,6 +62,35 @@ docker compose rm
 - `conda (version 23.9.0 or higher)`
 - `conda-lock (version 2.5.7 or higher)`
 
+### Running the analysis on local
+
+1. Open a terminal in the root of the folder. Please make sure conda and conda-lock is installed and the base environment is activated. To ensure the base is active run:
+```
+conda activate base
+```
+
+2. Run the following to create a new environment for the analysis (Replace `<env_name>` with a relevent name for your new environment)
+```
+conda-lock install --name <env_name> conda-lock.yml
+```
+Please wait a while for the packages to download.
+
+3. Now activate the new environment using
+```
+conda activate <env_name>
+```
+4. Now in the terminal execute the following commands from the `root` to run the analysis:
+
+Reset the project to a clean state (remove all generated files from the analysis)
+```
+make clean
+```
+Run the analysis in its entirity, including generation of new HTML report, run the following:
+
+```
+make all 
+```
+
 ### Adding a new dependency
 1. Add the dependency to the `environment.yml` file on a new branch.
 
@@ -121,8 +98,13 @@ docker compose rm
 ```
 conda-lock -k explicit --file environment.yml -p linux-64
 ``` 
+_Note: This may create additional lockfiles for multiple OS types, please ignore/delete the irrelevent lock-files._
 
-3. Re-build the Docker image locally to ensure it builds and runs properly.
+3. Re-build the Docker image locally to ensure it builds and runs properly. Replace `<your_tag>` with a tag of your choice.
+
+```
+docker build --tag <your_tag> .
+```
 
 4. Push the changes to GitHub. A new Docker image will be built and pushed to Docker Hub automatically. It will be tagged with the SHA for the commit that changed the file.
 
