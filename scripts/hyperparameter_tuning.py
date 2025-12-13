@@ -7,14 +7,13 @@ import os
 import numpy as np
 import pandas as pd
 import pickle
-from pathlib import Path
 from sklearn import set_config
-from sklearn.pipeline import make_pipeline
-from sklearn.model_selection import RandomizedSearchCV
-from sklearn.metrics import fbeta_score, make_scorer
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from utils.optimal_hyperparameters import tune_hyperparameters
+from utils.models import get_models, get_param_dist
+from utils.optimal_hyperparameters import get_best_model
 
 @click.command()
 @click.option('--train-data', required=True, help='Path to train data CSV')
@@ -41,44 +40,20 @@ def main(train_data, target_col, preprocessor_path, pos_label, beta, seed, resul
     with open(preprocessor_path, "rb") as f:
         preprocessor = pickle.load(f)
 
-    # Running the hyperparameter tuning for Decision Tree
-    tree_param_dist = {
-    'decisiontreeclassifier__max_depth': np.arange(1, 11)
-    }
-    tree_model = make_pipeline(preprocessor, DecisionTreeClassifier(random_state=seed))
-    search_tree = RandomizedSearchCV(tree_model, tree_param_dist, return_train_score=True,random_state=seed,
-                                    n_jobs=-1, scoring=make_scorer(fbeta_score, pos_label=pos_label, beta=beta))
-    search_tree.fit(X_train, y_train)
+    # Running the hyperparameter tuning for all models
+    model_summary = dict()
+    for model_name, model_info in get_models(random_state=seed).items():
+        if model_name == "Dummy Classifier":
+            continue
+        model_summary[model_name] = [tune_hyperparameters(X_train, y_train, model_info, preprocessor, get_param_dist()[model_name], pos_label, beta, seed), 
+                                     tune_hyperparameters(X_train, y_train, model_info, preprocessor, get_param_dist()[model_name], pos_label, beta, seed).best_score_,
+                                     tune_hyperparameters(X_train, y_train, model_info, preprocessor, get_param_dist()[model_name], pos_label, beta, seed).best_params_
+                                    ]
 
-    # Running the hyperparameter tuning for Logistic Regression
-    logistic_param_dist = {
-        "logisticregression__C" : 10.0 ** np.arange(-3, 2, 1),
-        "logisticregression__max_iter" : [80, 100, 500, 1000, 1500, 2000]
-    }
-    log_model = make_pipeline(preprocessor, LogisticRegression(random_state=seed))
-    search_log = RandomizedSearchCV(log_model, logistic_param_dist, return_train_score=True,random_state=seed,
-                                    n_jobs=-1, scoring=make_scorer(fbeta_score, pos_label=pos_label, beta=beta))
-    search_log.fit(X_train, y_train)
-
-    # Running the hyperparameter tuning for SVM
-    SVM_param_dist = {
-        "svc__C": 10.0 ** np.arange(-3, 2, 1),
-        "svc__gamma": 10.0 ** np.arange(-3, 2, 1)
-    }
-    svm_model = make_pipeline(preprocessor, SVC(random_state=seed))
-    search_svm = RandomizedSearchCV(svm_model, SVM_param_dist, return_train_score=True,random_state=seed,
-                                    n_jobs=-1, scoring=make_scorer(fbeta_score, pos_label=pos_label, beta=beta))
-    search_svm.fit(X_train, y_train)
-
-    # Finding the best model from the best scores
+    # Finding the best model from the best scores and creating final_model
     results_dict = dict()
     best_score = 0
     best_model = None
-    model_summary = {
-        'Decision Tree': [search_tree, search_tree.best_score_, search_tree.best_params_],
-        'Logistic Regression': [search_log, search_log.best_score_, search_log.best_params_],
-        'RBF SVM': [search_svm, search_svm.best_score_, search_svm.best_params_]
-    }
     for model_name, summary in model_summary.items():
         results_dict[model_name] = [summary[1], summary[2]]
         print(f"The best F2 score for {model_name} is {summary[1]} with parameters {summary[2]}")
@@ -87,8 +62,6 @@ def main(train_data, target_col, preprocessor_path, pos_label, beta, seed, resul
             best_model = model_name
         else:
             continue
-    
-    # Build Final Models with Best Parameters
     final_model = model_summary[best_model][0].best_estimator_
     
     os.makedirs(results_to, exist_ok=True)

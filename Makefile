@@ -1,6 +1,27 @@
+# Makefile
+
+# This driver script runs the full pipeline:
+# Starting from importing the data, download and save it in
+# a data folder, processes it, generate EDA plots, run 
+# default models, do hyperparameter tuning and score on the
+# test set and finally generates a quarto html
+
+# example usage:
+## clean all outputs
+# make clean 
+## create all outputs
+# make all
+
+.PHONY: all clean
+
+# run entire analysis
+all: analysis/heart_disease_analysis.html
+
 # =========================================================
 # 1. Download and extract data
 # =========================================================
+data/raw/dataset.zip \
+data/raw/Cardiovascular_Disease_Dataset/Cardiovascular_Disease_Dataset_Description.pdf \
 data/raw/Cardiovascular_Disease_Dataset/Cardiovascular_Disease_Dataset.csv : scripts/import_data.py
 	python scripts/import_data.py \
 		--url https://prod-dcd-datasets-cache-zipfiles.s3.eu-west-1.amazonaws.com/dzz48mvjht-1.zip \
@@ -56,8 +77,8 @@ $(EDA_OUTPUTS) : scripts/eda.py data/processed/train_heart.csv
 # =========================================================
 # 5. Run models
 # =========================================================
-results/CV_scores_default_parameters.csv : scripts/evaluate_default_models.py data/processed/train_heart.csv results/preprocessor/heart_preprocessor.pickle
-    python scripts/evaluate_default_models.py \
+results/cv_default_models/cv_scores_default_parameters.csv : scripts/evaluate_default_models.py data/processed/train_heart.csv results/preprocessor/heart_preprocessor.pickle
+	python scripts/evaluate_default_models.py \
 		--train-data data/processed/train_heart.csv \
 		--target-col target \
 		--preprocessor-path results/preprocessor/heart_preprocessor.pickle \
@@ -70,24 +91,26 @@ results/CV_scores_default_parameters.csv : scripts/evaluate_default_models.py da
 # 6. Hyperparameter tuning
 # =========================================================
 HPT_OUTPUTS = \
-    results/final_model_results/final_model.pickle \
-    results/final_model_results/hyperparameter_model_results.csv
+	results/final_model_results/final_model.pickle \
+	results/final_model_results/hyperparameter_model_results.csv
 
-$(HPT_OUTPUTS): scripts/hyperparameter_tuning.py $(PREPROC_OUTPUTS)
-	python scripts/hyperparameter_tuning.py --train-data data/processed/train_heart.csv \
-	--target-col target \
-	--preprocessor-path results/preprocessor/heart_preprocessor.pickle \
-	--pos-label "Heart Disease" \
-	--beta 2.0 \
-	--seed 123 \
-	--results-to results/final_model_results
+$(HPT_OUTPUTS): scripts/hyperparameter_tuning.py data/processed/train_heart.csv results/preprocessor/heart_preprocessor.pickle
+	python scripts/hyperparameter_tuning.py \
+		--train-data data/processed/train_heart.csv \
+		--target-col target \
+		--preprocessor-path results/preprocessor/heart_preprocessor.pickle \
+		--pos-label "Heart Disease" \
+		--beta 2.0 \
+		--seed 123 \
+		--results-to results/final_model_results
 
 # =========================================================
 # 7. Evaluate final model
 # =========================================================
 EVAL_OUTPUTS = \
-    results/final_model_results/evaluate_model_results.csv \
-    results/final_model_results/confusion_matrix.png
+	results/final_model_results/evaluate_model_results.csv \
+	results/final_model_results/confusion_matrix.png \
+	results/final_model_results/confusion_matrix.csv
 
 $(EVAL_OUTPUTS): scripts/evaluate_scores.py data/processed/test_heart.csv results/final_model_results/final_model.pickle
 	python scripts/evaluate_scores.py \
@@ -99,6 +122,15 @@ $(EVAL_OUTPUTS): scripts/evaluate_scores.py data/processed/test_heart.csv result
 		--results-to results/final_model_results
 
 # =========================================================
-# Default target
+# 8. Generate quarto html
 # =========================================================
-all: $(PREPROC_OUTPUTS) $(EDA_OUTPUTS) results/CV_scores_default_parameters.csv $(HPT_OUTPUTS) $(EVAL_OUTPUTS)
+analysis/heart_disease_analysis.html : $(EDA_OUTPUTS) results/cv_default_models/cv_scores_default_parameters.csv $(EVAL_OUTPUTS)
+	quarto render analysis/heart_disease_analysis.qmd --to html
+
+# =========================================================
+# Clean ALL
+# =========================================================
+clean:
+	rm -rf data
+	rm -rf results
+	rm -rf analysis/heart_disease_analysis.html analysis/heart_disease_analysis_files

@@ -1,4 +1,4 @@
 ,F2 Score,Best Model Parameters
 Decision Tree,0.9619110139939451,{'decisiontreeclassifier__max_depth': 9}
 Logistic Regression,0.9608883806130925,"{'logisticregression__max_iter': 80, 'logisticregression__C': 0.1}"
-RBF SVM,0.9678544471732821,"{'svc__gamma': 0.1, 'svc__C': 10.0}"
+SVM RBF,0.9678544471732821,"{'svc__gamma': 0.1, 'svc__C': 10.0}"
