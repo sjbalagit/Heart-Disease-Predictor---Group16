@@ -1,3 +1,5 @@
+# All docstrings in this file were written with the assistance of ChatGPT
+
 import pytest
 import sys
 import os
@@ -10,6 +12,15 @@ from utils.eda_helper import plot_numerical_distributions
 
 @pytest.fixture
 def simple_dataframe():
+    """
+    Fixture that provides a simple sample DataFrame for testing.
+
+    Returns
+    -------
+    pd.DataFrame
+        A small DataFrame with three rows and columns: 
+        'class', 'mean_radius', and 'mean_area'.
+    """
     return pd.DataFrame({
         "class": ["Benign", "Malignant", "Benign"],
         "mean_radius": [6.1, 7.8, 6.5],
@@ -18,6 +29,19 @@ def simple_dataframe():
 
 
 def test_plot_numerical_distributions_basic(simple_dataframe):
+    """
+    Test the basic functionality of `plot_numerical_distributions`.
+
+    Verifies that the function returns an Altair VConcatChart with:
+    - Correct x-axis mapping to the specified numerical column.
+    - Bar marks for the histogram.
+    - Proper behavior with a standard DataFrame.
+
+    Parameters
+    ----------
+    simple_dataframe : pd.DataFrame
+        Fixture providing a small test DataFrame.
+    """
     df = simple_dataframe
     chart = plot_numerical_distributions(df, ["mean_radius","mean_area"])
     hist = chart.vconcat[0].hconcat[0]
@@ -28,6 +52,20 @@ def test_plot_numerical_distributions_basic(simple_dataframe):
 
 
 def test_plot_numerical_distributions_edge_cases(simple_dataframe):
+    """
+    Test `plot_numerical_distributions` on edge cases.
+
+    Checks that the function works correctly for:
+    - An empty DataFrame.
+    - A single-row DataFrame.
+    Ensures that the chart is still returned as an Altair VConcatChart 
+    and the x-axis mapping is correct.
+
+    Parameters
+    ----------
+    simple_dataframe : pd.DataFrame
+        Fixture providing a small test DataFrame.
+    """
     df = simple_dataframe
 
     df_empty = df.iloc[0:0]
@@ -42,6 +80,18 @@ def test_plot_numerical_distributions_edge_cases(simple_dataframe):
 
 
 def test_plot_numerical_distributions_with_nans(simple_dataframe):
+    """
+    Test `plot_numerical_distributions` when the DataFrame contains NaN values.
+
+    Ensures that the function:
+    - Returns an Altair VConcatChart even when some numeric values are missing.
+    - Maintains correct x-axis mapping despite NaNs.
+
+    Parameters
+    ----------
+    simple_dataframe : pd.DataFrame
+        Fixture providing a small test DataFrame.
+    """
     df = simple_dataframe.copy()
     df.loc[1, "mean_radius"] = None  
     chart_nans = plot_numerical_distributions(df, ["mean_radius","mean_area"])
