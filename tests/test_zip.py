@@ -1,3 +1,6 @@
+# Test case functions and documentation generated using GPT 4.0, 
+# prompted to create test cases for a passed list of possibilities
+
 import os,sys
 import zipfile
 import pytest
