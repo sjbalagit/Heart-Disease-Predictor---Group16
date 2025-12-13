@@ -41,7 +41,7 @@ recall_score = round(tp / (tp + fn), 2)
 precision_score = round(tp / (tp + fp), 2)
 
 hyp_df = pd.read_csv("../results/final_model_results/hyperparameter_model_results.csv")
-svm_row = hyp_df[hyp_df.iloc[:, 0] == 'RBF SVM'].iloc[0]
+svm_row = hyp_df[hyp_df.iloc[:, 0] == 'SVM RBF'].iloc[0]
 best_val_score = round(svm_row['F2 Score'], 4)
 params = ast.literal_eval(svm_row['Best Model Parameters'])
 best_c = params.get('svc__C')
@@ -104,7 +104,7 @@ This section provides a detailed exploration of the dataset, focusing on the dis
 
 ![Class balance of the heart disease target variable (Presence vs. Absence).](../results/eda_results/target_distribution.png){#fig-targ-dist width=85%}
 
-**Feature Distributions:** As seen in @fig-num-hist, none of the continuous features follow a perfect normal distribution. Notably, serum cholesterol and oldpeak are right-skewed, while maximum heart rate is left-skewed.
+**Feature Distributions:** As seen in @fig-num-hist, none of the continuous features follow a perfect normal distribution. Notably, serum cholesterol and oldpeak are right-skewed, while maximum heart rate is left-skewed. Oldpeak represents how much the heart’s electrical activity shows stress related oxygen deprivation during exercise. Larger values indicate worse blood flow to the heart muscle.
 
 ![Histograms displaying the distribution of continuous features.](../results/eda_results/numerical_feature_distributions.png){#fig-num-hist width=85%}
 
